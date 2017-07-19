@@ -21,8 +21,12 @@ android {
 }
 
 dependencies {
+    compile project(':shared')
     compile fileTree(include: ['*.jar'], dir: 'libs')
     compile 'com.google.android.support:wearable:2.0.3'
     compile 'com.google.android.gms:play-services-wearable:11.0.2'
     provided 'com.google.android.wearable:wearable:1.0.0'
+
+    compile 'com.jakewharton:butterknife:8.5.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.5.1'
 }

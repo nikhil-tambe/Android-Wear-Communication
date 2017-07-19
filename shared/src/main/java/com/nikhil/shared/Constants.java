@@ -6,9 +6,16 @@ package com.nikhil.shared;
 
 public interface Constants {
 
+    interface Capabilities {
+        String VOICE_TRANSCRIPTION_CAPABILITY_NAME = "voice_transcription";
 
-    interface ChannelC{
+    }
+
+    interface ChannelC {
         String MESSAGE_CHANNEL = "/mess";
+        String START_ACTIVITY_PATH = "/start-activity";
+        String COUNT_PATH = "/count";
+        String DATA_ITEM_RECEIVED_PATH = "/data-item-received";
     }
 
     interface SPF {
@@ -23,8 +30,9 @@ public interface Constants {
 
     }
 
-    interface IntentC{
-        //String KEY_
+    interface IntentC {
+        int REQUEST_RESOLVE_ERROR = 1000;
+
     }
 
 }

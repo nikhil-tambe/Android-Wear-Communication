@@ -1,5 +1,8 @@
 package com.nikhil.phone.ui.activities;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -14,10 +17,14 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.nikhil.phone.R;
+import com.nikhil.phone.app.ApplicationClass;
+import com.nikhil.phone.comm.DataLayerService;
 import com.nikhil.phone.home.SectionsPagerAdapter;
 
 public class HomeActivity extends AppCompatActivity {
 
+    public static final String TAG = "nikhil " + HomeActivity.class.getSimpleName();
+    Context context;
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
      * fragments for each of the sections. We use a
@@ -37,6 +44,10 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        context = ApplicationClass.getAppContext();
+
+        startService(new Intent(context, DataLayerService.class));
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
