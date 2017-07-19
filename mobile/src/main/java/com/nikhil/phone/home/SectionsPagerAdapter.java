@@ -4,6 +4,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import com.nikhil.phone.ui.fragments.MessageFragment;
+import com.nikhil.phone.ui.fragments.PlaceholderFragment;
+
 /**
  * Created by Nikhil on 15/7/17.
  */
@@ -23,7 +26,15 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         // getItem is called to instantiate the fragment for the given page.
         // Return a PlaceholderFragment (defined as a static inner class below).
-        return PlaceholderFragment.newInstance(position + 1);
+
+        switch (position) {
+            case 0:
+                return MessageFragment.newInstance("asd");
+
+            default:
+                return PlaceholderFragment.newInstance(position + 1);
+        }
+
     }
 
     @Override
