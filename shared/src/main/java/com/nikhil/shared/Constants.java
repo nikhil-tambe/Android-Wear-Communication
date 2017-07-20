@@ -24,19 +24,25 @@ public interface Constants {
 
     interface SPF {
         String SPF_APP = "spf_app";
-        String KEY_DEVICE_NAME = "device_";
-        String KEY_DEVICE_MODEL = "device_";
-        String KEY_DEVICE_VERSION = "device_";
-        String KEY_DEVICE_MANUFACTURER = "device_";
+        String KEY_DEVICE_NAME = "device_name";
+        String KEY_DEVICE_MODEL = "device_model";
+        String KEY_DEVICE_VERSION = "device_version";
+        String KEY_DEVICE_MANUFACTURER = "device_manufacturer";
     }
 
     interface StorageC {
-
+        String SESSION_LOG_CSV = "/session_log.csv";
     }
 
     interface IntentC {
         int REQUEST_RESOLVE_ERROR = 1000;
+        int REQUEST_CODE_GROUP_PERMISSIONS = 123;
+    }
 
+    interface MathC {
+        int FRAME_RATE = 2;
+        int p = 1000000;
+        double pd = 1000000.0d;
     }
 
 }

@@ -1,6 +1,9 @@
 package com.nikhil.wear.ui.activities;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -41,6 +44,7 @@ import java.util.Set;
 import static com.nikhil.shared.Constants.ChannelC.KEY_IMAGE;
 import static com.nikhil.shared.Constants.ChannelC.PATH_COUNT;
 import static com.nikhil.shared.Constants.ChannelC.PATH_IMAGE;
+import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS;
 
 /**
  * Created by Nikhil on 20/7/17.
@@ -77,7 +81,32 @@ public class MainActivity extends Activity implements
     @Override
     protected void onResume() {
         super.onResume();
+        checkRequiredPermissions();
         mGoogleApiClient.connect();
+    }
+
+    private void checkRequiredPermissions(){
+        String[] permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BODY_SENSORS,
+                Manifest.permission.READ_PHONE_STATE};
+        if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED ||
+                checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(permissions, REQUEST_CODE_GROUP_PERMISSIONS);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_GROUP_PERMISSIONS) {
+            for (int resultStatus : grantResults) {
+                if (resultStatus == PackageManager.PERMISSION_DENIED) {
+                    finish();
+                }
+            }
+        }
     }
 
     @Override
@@ -149,7 +178,8 @@ public class MainActivity extends Activity implements
                 showNodes(CAPABILITY_2_NAME);
                 break;
             case R.id.two:
-                showNodes(CAPABILITY_1_NAME, CAPABILITY_2_NAME);
+                //showNodes(CAPABILITY_1_NAME, CAPABILITY_2_NAME);
+                startActivity(new Intent(this, SensorActivity.class));
                 break;
             default:
                 Log.e(TAG, "Unknown click event registered");

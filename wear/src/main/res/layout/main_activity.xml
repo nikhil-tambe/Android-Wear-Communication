@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:onClick="onClicked"
-        android:text="One"/>
+        android:text="Capability"/>
 
     <Button
         android:id="@+id/two"
@@ -19,6 +19,6 @@
         android:layout_below="@+id/one"
         android:layout_centerInParent="true"
         android:onClick="onClicked"
-        android:text="Two"/>
+        android:text="Sensors"/>
 
 </RelativeLayout>
