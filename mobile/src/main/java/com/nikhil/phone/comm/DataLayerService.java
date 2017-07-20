@@ -1,14 +1,12 @@
 package com.nikhil.phone.comm;
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
@@ -19,14 +17,11 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.google.android.gms.wearable.zzd;
 import com.nikhil.phone.app.ApplicationClass;
-import com.nikhil.phone.ui.activities.HomeActivity;
 
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static com.nikhil.shared.Constants.Capabilities.VOICE_TRANSCRIPTION_CAPABILITY_NAME;
-import static com.nikhil.shared.Constants.ChannelC.MESSAGE_CHANNEL;
+import static com.nikhil.shared.Constants.ChannelC.PATH_MESSAGE;
 
 /**
  * Created by Nikhil on 19/7/17.
@@ -90,7 +85,7 @@ public class DataLayerService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        if (messageEvent.getPath().equals(MESSAGE_CHANNEL)) {
+        if (messageEvent.getPath().equals(PATH_MESSAGE)) {
 
             String s = new String(messageEvent.getData());
 

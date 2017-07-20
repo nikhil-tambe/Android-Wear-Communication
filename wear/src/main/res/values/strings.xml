@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Wear Communication</string>
     <string name="hello_world">Hello World!</string>
+
+    <string name="intro">Waiting for data to arrive\u2026</string>
+    <string name="capability_2_notification">Capability 2</string>
+    <string name="capabilities_1_and_2_notification">Capabilities 1 and 2</string>
+    <string name="no_device">No device provides the requested capabilities</string>
+    <string name="connected_nodes">Nodes: %1$s</string>
+
 </resources>

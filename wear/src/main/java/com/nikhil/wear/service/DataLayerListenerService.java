@@ -2,45 +2,42 @@ package com.nikhil.wear.service;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.CapabilityInfo;
-import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
-import com.google.android.gms.wearable.zzd;
-import com.nikhil.wear.ui.activities.HomeActivity;
+import com.nikhil.wear.ui.activities.MainActivity;
 
 import java.util.concurrent.TimeUnit;
 
-import static com.nikhil.shared.Constants.ChannelC.COUNT_PATH;
-import static com.nikhil.shared.Constants.ChannelC.DATA_ITEM_RECEIVED_PATH;
-import static com.nikhil.shared.Constants.ChannelC.START_ACTIVITY_PATH;
+import static com.nikhil.shared.Constants.ChannelC.PATH_COUNT;
+import static com.nikhil.shared.Constants.ChannelC.PATH_DATA_ITEM_RECEIVED;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_ACTIVITY;
 
 /**
  * Created by Nikhil on 19/7/17.
  */
 
-public class DataLayerListenerService extends WearableListenerService {
+public class DataLayerListenerService extends WearableListenerService{
+        //implements GoogleApiClient.ConnectionCallbacks {
 
     public static final String TAG = "nikhil DataListener";
     GoogleApiClient googleApiClient;
-    
-    public DataLayerListenerService() {
-        super();
-    }
 
     @Override
     public void onCreate() {
         super.onCreate();
-
+        Log.d(TAG, "onCreate: ");
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
+                //.addConnectionCallbacks(this)
                 .build();
 
         googleApiClient.connect();
@@ -48,7 +45,7 @@ public class DataLayerListenerService extends WearableListenerService {
 
     @Override
     public void onDestroy() {
-        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
     }
 
     @Override
@@ -67,7 +64,7 @@ public class DataLayerListenerService extends WearableListenerService {
         for (DataEvent event : dataEventBuffer) {
             Uri uri = event.getDataItem().getUri();
             String path = uri.getPath();
-            if (COUNT_PATH.equals(path)) {
+            if (PATH_COUNT.equals(path)) {
                 // Get the node id of the node that created the data item from the host portion of
                 // the uri.
                 String nodeId = uri.getHost();
@@ -75,7 +72,7 @@ public class DataLayerListenerService extends WearableListenerService {
                 byte[] payload = uri.toString().getBytes();
 
                 // Send the rpc
-                Wearable.MessageApi.sendMessage(googleApiClient, nodeId, DATA_ITEM_RECEIVED_PATH,
+                Wearable.MessageApi.sendMessage(googleApiClient, nodeId, PATH_DATA_ITEM_RECEIVED,
                         payload);
             }
         }
@@ -83,40 +80,21 @@ public class DataLayerListenerService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        if (messageEvent.getPath().equals(START_ACTIVITY_PATH)) {
-            Intent startIntent = new Intent(this, HomeActivity.class);
+        Log.d(TAG, "onMessageReceived: " + messageEvent.getPath() + ": " + messageEvent.toString());
+        if (messageEvent.getPath().equals(PATH_START_ACTIVITY)) {
+            Intent startIntent = new Intent(this, MainActivity.class);
             startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(startIntent);
         }
     }
 
-    @Override
-    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-        super.onCapabilityChanged(capabilityInfo);
+    /*@Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "api connected onConnected: ");
     }
 
     @Override
-    public void onChannelOpened(Channel channel) {
-        super.onChannelOpened(channel);
-    }
+    public void onConnectionSuspended(int i) {
 
-    @Override
-    public void onChannelClosed(Channel channel, int i, int i1) {
-        super.onChannelClosed(channel, i, i1);
-    }
-
-    @Override
-    public void onInputClosed(Channel channel, int i, int i1) {
-        super.onInputClosed(channel, i, i1);
-    }
-
-    @Override
-    public void onOutputClosed(Channel channel, int i, int i1) {
-        super.onOutputClosed(channel, i, i1);
-    }
-
-    @Override
-    public void onNotificationReceived(zzd zzd) {
-        super.onNotificationReceived(zzd);
-    }
+    }*/
 }

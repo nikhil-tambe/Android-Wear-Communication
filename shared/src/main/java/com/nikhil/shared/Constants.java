@@ -12,10 +12,14 @@ public interface Constants {
     }
 
     interface ChannelC {
-        String MESSAGE_CHANNEL = "/mess";
-        String START_ACTIVITY_PATH = "/start-activity";
-        String COUNT_PATH = "/count";
-        String DATA_ITEM_RECEIVED_PATH = "/data-item-received";
+        String PATH_MESSAGE = "/actofit-mess";
+        String PATH_START_ACTIVITY = "/actofit-start-activity";
+        String PATH_COUNT = "/actofit-count";
+        String PATH_DATA_ITEM_RECEIVED = "/actofit-data-item-received";
+        String PATH_IMAGE = "/actofit-image";
+
+        String KEY_IMAGE = "actofit-photo";
+
     }
 
     interface SPF {

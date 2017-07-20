@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -33,7 +34,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import static com.nikhil.shared.Constants.ChannelC.START_ACTIVITY_PATH;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_ACTIVITY;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
 
 /**
@@ -49,12 +50,11 @@ public class CommActivity extends AppCompatActivity
 
     public static final String TAG = "nikhil " + CommActivity.class.getSimpleName();
     GoogleApiClient googleApiClient;
+    //@BindView(R.id.messageInput_EditText)
+    //EditText messageInput_EditText;
+    @BindView(R.id.startApp_Button)
+    Button startApp_Button;
     private boolean resolvingError = false;
-
-    @BindView(R.id.messageInput_EditText)
-    EditText messageInput_EditText;
-    @BindView(R.id.sendMessage_Button)
-    Button sendMessage_Button;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,18 +75,21 @@ public class CommActivity extends AppCompatActivity
         super.onStart();
         if (!resolvingError) {
             googleApiClient.connect();
+        } else {
+            Log.d(TAG, "onStart: Resolving Error " + resolvingError);
         }
     }
 
-    @OnClick(R.id.sendMessage_Button)
-    public void sendMessage_ButtonClicked(){
+    @OnClick(R.id.startApp_Button)
+    public void startApp_ButtonClicked() {
         new StartWearableActivityTask().execute();
     }
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
+        Toast.makeText(this, "API Connected", Toast.LENGTH_SHORT).show();
         resolvingError = false;
-        sendMessage_Button.setEnabled(true);
+        startApp_Button.setEnabled(true);
         Wearable.DataApi.addListener(googleApiClient, this);
         Wearable.MessageApi.addListener(googleApiClient, this);
         Wearable.CapabilityApi.addListener(
@@ -95,7 +98,7 @@ public class CommActivity extends AppCompatActivity
 
     @Override
     public void onConnectionSuspended(int i) {
-        sendMessage_Button.setEnabled(false);
+        startApp_Button.setEnabled(false);
     }
 
     @Override
@@ -113,7 +116,7 @@ public class CommActivity extends AppCompatActivity
             } else {
                 Log.e(TAG, "Connection to Google API client has failed");
                 resolvingError = false;
-                sendMessage_Button.setEnabled(false);
+                startApp_Button.setEnabled(false);
                 Wearable.DataApi.removeListener(googleApiClient, this);
                 Wearable.MessageApi.removeListener(googleApiClient, this);
                 Wearable.CapabilityApi.removeListener(googleApiClient, this);
@@ -123,7 +126,7 @@ public class CommActivity extends AppCompatActivity
 
     @Override
     public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-        Log.d(TAG, "onCapabilityChanged: onCapabilityChanged: " +capabilityInfo.toString());
+        Log.d(TAG, "onCapabilityChanged: onCapabilityChanged: " + capabilityInfo.toString());
     }
 
     @Override
@@ -142,6 +145,37 @@ public class CommActivity extends AppCompatActivity
         Log.d(TAG, "onMessageReceived: Message from watch: " + messageEvent.toString());
     }
 
+    private Collection<String> getNodes() {
+        HashSet<String> results = new HashSet<>();
+        NodeApi.GetConnectedNodesResult nodes =
+                Wearable.NodeApi.getConnectedNodes(googleApiClient).await();
+
+        for (Node node : nodes.getNodes()) {
+            Log.d(TAG, "getNodes: " + node.getId()
+                    + ": " + node.getDisplayName() + ": " + node.isNearby());
+            results.add(node.getId());
+        }
+
+        return results;
+    }
+
+    private void sendStartActivityMessage(final String node) {
+        Wearable.MessageApi.sendMessage(
+                googleApiClient, node, PATH_START_ACTIVITY, new byte[0]).setResultCallback(
+                new ResultCallback<MessageApi.SendMessageResult>() {
+                    @Override
+                    public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                        if (!sendMessageResult.getStatus().isSuccess()) {
+                            Log.e(TAG, "Failed to send message with status code: "
+                                    + sendMessageResult.getStatus().getStatusCode());
+                        } else {
+                            Log.d(TAG, "onResult: message sent to " + node);
+                        }
+                    }
+                }
+        );
+    }
+
     private class StartWearableActivityTask extends AsyncTask<Void, Void, Void> {
 
         @Override
@@ -152,32 +186,5 @@ public class CommActivity extends AppCompatActivity
             }
             return null;
         }
-    }
-
-    private Collection<String> getNodes() {
-        HashSet<String> results = new HashSet<>();
-        NodeApi.GetConnectedNodesResult nodes =
-                Wearable.NodeApi.getConnectedNodes(googleApiClient).await();
-
-        for (Node node : nodes.getNodes()) {
-            results.add(node.getId());
-        }
-
-        return results;
-    }
-
-    private void sendStartActivityMessage(String node) {
-        Wearable.MessageApi.sendMessage(
-                googleApiClient, node, START_ACTIVITY_PATH, new byte[0]).setResultCallback(
-                new ResultCallback<MessageApi.SendMessageResult>() {
-                    @Override
-                    public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                        if (!sendMessageResult.getStatus().isSuccess()) {
-                            Log.e(TAG, "Failed to send message with status code: "
-                                    + sendMessageResult.getStatus().getStatusCode());
-                        }
-                    }
-                }
-        );
     }
 }
