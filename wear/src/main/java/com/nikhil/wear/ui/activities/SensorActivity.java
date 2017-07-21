@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
@@ -14,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.nikhil.wear.R;
+import com.nikhil.wear.comm.WearChannelAsync;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -26,6 +28,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import static com.nikhil.shared.Constants.ChannelC.CHANNEL_SESSION;
 import static com.nikhil.shared.Constants.MathC.FRAME_RATE;
 import static com.nikhil.shared.Constants.MathC.p;
 import static com.nikhil.shared.Constants.MathC.pd;
@@ -158,11 +161,11 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
         startSensor_Button.setVisibility(View.VISIBLE);
         stopSensor_Button.setVisibility(View.GONE);
         sendFile_Button.setVisibility(View.GONE);
-        sendFile(sessionCSV);
+        sendFile(sessionCSV, CHANNEL_SESSION);
     }
 
-    private void sendFile(File sessionCSV) {
-
+    private void sendFile(File file, String channelName) {
+        new WearChannelAsync(context, Uri.fromFile(file), channelName).execute();
     }
 
     private void registerSensor() {

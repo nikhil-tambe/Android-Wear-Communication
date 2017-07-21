@@ -2,11 +2,14 @@ package com.nikhil.phone.comm;
 
 import android.content.Context;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
@@ -15,33 +18,45 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
-import com.google.android.gms.wearable.zzd;
 import com.nikhil.phone.app.ApplicationClass;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import static com.nikhil.shared.Constants.ChannelC.CHANNEL_SESSION;
+import static com.nikhil.shared.Constants.ChannelC.CHANNEL_SESSION_DATE;
+import static com.nikhil.shared.Constants.ChannelC.PATH_DATA_ITEM_RECEIVED;
 import static com.nikhil.shared.Constants.ChannelC.PATH_MESSAGE;
+import static com.nikhil.shared.Constants.StorageC.SESSION_DATE_CSV;
+import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
+import static com.nikhil.shared.Constants.StorageC.UNKNOW_FILE_TXT;
 
 /**
  * Created by Nikhil on 19/7/17.
  */
 
-public class DataLayerService extends WearableListenerService {
+public class PhoneDataLayerListenerService extends WearableListenerService {
 
-    private static final String TAG = "nikhil " + DataLayerService.class.getSimpleName();
-    private static final String START_ACTIVITY_PATH = "/start-activity";
-    private static final String DATA_ITEM_RECEIVED_PATH = "/data-item-received";
+    private static final String TAG = "nikhil " + PhoneDataLayerListenerService.class.getSimpleName();
     Context context;
     GoogleApiClient googleApiClient;
+    File sessionFile, dateFile, unknownFile;
 
-    public DataLayerService() {
+    public PhoneDataLayerListenerService() {
         context = ApplicationClass.getAppContext();
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate: ");
+        sessionFile = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+        dateFile = new File(getExternalFilesDir(null), SESSION_DATE_CSV);
+        unknownFile = new File(getExternalFilesDir(null), UNKNOW_FILE_TXT);
     }
 
     @Override
@@ -79,7 +94,7 @@ public class DataLayerService extends WearableListenerService {
 
             // Send the RPC
             Wearable.MessageApi.sendMessage(googleApiClient, nodeId,
-                    DATA_ITEM_RECEIVED_PATH, payload);
+                    PATH_DATA_ITEM_RECEIVED, payload);
         }
     }
 
@@ -122,27 +137,72 @@ public class DataLayerService extends WearableListenerService {
 
     @Override
     public void onChannelOpened(Channel channel) {
-        super.onChannelOpened(channel);
+        Log.d(TAG, "onChannelOpened: " + channel.getPath());
+        switch (channel.getPath()){
+
+            case CHANNEL_SESSION:
+                receiveFile(channel, sessionFile);
+                break;
+
+            case CHANNEL_SESSION_DATE:
+                receiveFile(channel, dateFile);
+                break;
+
+            default:
+                receiveFile(channel, unknownFile);
+                break;
+        }
+
+    }
+
+    private void receiveFile(final Channel channel, final File file) {
+        channel.receiveFile(googleApiClient, Uri.fromFile(file), false)
+                .setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                Log.d(TAG, "onResult: " + file.getName() + " : " + status);
+                Toast.makeText(context,
+                        file.getName() + " received. " + status ,
+                        Toast.LENGTH_SHORT).show();
+                renameFile(channel.getPath(), file);
+            }
+        });
+    }
+
+    private void renameFile(String path, File file) {
+        String s = new SimpleDateFormat("yyyyMMddkkmmss", Locale.ENGLISH).format(new Date()) + ".csv";
+        switch (path){
+            case CHANNEL_SESSION:
+                File sessionFile = new File(getExternalFilesDir(null) + "/session_" + s);
+                Log.e(TAG, "renamedFile to session_" + s + ": " + file.renameTo(sessionFile));
+                break;
+
+            case CHANNEL_SESSION_DATE:
+                File sessionDateFile = new File(getExternalFilesDir(null) + "/sessionDate_" + s);
+                Log.e(TAG, "renamedFile to sessionDate_" + s + ": " + file.renameTo(sessionDateFile));
+                break;
+
+            default:
+                File newUnknownFile = new File(getExternalFilesDir(null)+ "/unknown_" + s);
+                Log.e(TAG, "renamedFile to unknown_" + s + ": " + file.renameTo(newUnknownFile));
+                break;
+
+        }
     }
 
     @Override
     public void onChannelClosed(Channel channel, int i, int i1) {
-        super.onChannelClosed(channel, i, i1);
+        Log.d(TAG, "onChannelClosed: " + channel.getPath());
     }
 
     @Override
     public void onInputClosed(Channel channel, int i, int i1) {
-        super.onInputClosed(channel, i, i1);
+        Log.d(TAG, "onInputClosed: " + channel.getPath());
     }
 
     @Override
     public void onOutputClosed(Channel channel, int i, int i1) {
-        super.onOutputClosed(channel, i, i1);
-    }
-
-    @Override
-    public void onNotificationReceived(zzd zzd) {
-        super.onNotificationReceived(zzd);
+        Log.d(TAG, "onOutputClosed: " + channel.getPath());
     }
 
 }

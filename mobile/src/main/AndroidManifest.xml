@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".comm.DataLayerService">
+        <service android:name=".comm.PhoneDataLayerListenerService">
             <intent-filter>
                 <!-- listeners receive events that match the action and data filters -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />

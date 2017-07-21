@@ -46,7 +46,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name="com.nikhil.wear.service.DataLayerListenerService">
+        <service android:name="com.nikhil.wear.comm.WearDataLayerListenerService">
             <intent-filter>
                 <!-- listeners receive events that match the action and data filters -->
                 <action android:name="com.google.android.gms.wearable.DATA_CHANGED" />

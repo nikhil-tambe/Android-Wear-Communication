@@ -20,6 +20,9 @@ public interface Constants {
 
         String KEY_IMAGE = "actofit-photo";
 
+        String CHANNEL_SESSION = "channelSession";
+        String CHANNEL_SESSION_DATE = "channelDate";
+
     }
 
     interface SPF {
@@ -32,6 +35,8 @@ public interface Constants {
 
     interface StorageC {
         String SESSION_LOG_CSV = "/session_log.csv";
+        String SESSION_DATE_CSV = "/session_date.csv";
+        String UNKNOW_FILE_TXT = "/unknown.txt";
     }
 
     interface IntentC {

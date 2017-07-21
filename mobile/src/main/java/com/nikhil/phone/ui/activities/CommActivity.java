@@ -27,6 +27,7 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
 
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -50,8 +51,8 @@ public class CommActivity extends AppCompatActivity
 
     public static final String TAG = "nikhil " + CommActivity.class.getSimpleName();
     GoogleApiClient googleApiClient;
-    //@BindView(R.id.messageInput_EditText)
-    //EditText messageInput_EditText;
+    @BindView(R.id.messageInput_EditText)
+    EditText messageInput_EditText;
     @BindView(R.id.startApp_Button)
     Button startApp_Button;
     private boolean resolvingError = false;
@@ -62,6 +63,8 @@ public class CommActivity extends AppCompatActivity
         setContentView(R.layout.fragment_message);
 
         ButterKnife.bind(this);
+
+        //startService(new Intent(this, PhoneDataLayerListenerService.class));
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -82,7 +85,7 @@ public class CommActivity extends AppCompatActivity
 
     @OnClick(R.id.startApp_Button)
     public void startApp_ButtonClicked() {
-        new StartWearableActivityTask().execute();
+        new StartWearableActivityTask().execute(messageInput_EditText.getText().toString());
     }
 
     @Override
@@ -159,30 +162,34 @@ public class CommActivity extends AppCompatActivity
         return results;
     }
 
-    private void sendStartActivityMessage(final String node) {
-        Wearable.MessageApi.sendMessage(
-                googleApiClient, node, PATH_START_ACTIVITY, new byte[0]).setResultCallback(
-                new ResultCallback<MessageApi.SendMessageResult>() {
-                    @Override
-                    public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                        if (!sendMessageResult.getStatus().isSuccess()) {
-                            Log.e(TAG, "Failed to send message with status code: "
-                                    + sendMessageResult.getStatus().getStatusCode());
-                        } else {
-                            Log.d(TAG, "onResult: message sent to " + node);
+    private void sendStartActivityMessage(final String node, String s) {
+
+        byte[] message = s.getBytes(); //Charset.forName("UTF-8"));
+
+        Wearable.MessageApi.sendMessage(googleApiClient, node, PATH_START_ACTIVITY, message)
+                .setResultCallback(
+                        new ResultCallback<MessageApi.SendMessageResult>() {
+                            @Override
+                            public void onResult(MessageApi.SendMessageResult sendMessageResult) {
+                                if (!sendMessageResult.getStatus().isSuccess()) {
+                                    Log.e(TAG, "Failed to send message with status code: "
+                                            + sendMessageResult.getStatus().getStatusCode());
+                                } else {
+                                    Log.d(TAG, "onResult: message sent to " + node);
+                                }
+                            }
                         }
-                    }
-                }
-        );
+                );
     }
 
-    private class StartWearableActivityTask extends AsyncTask<Void, Void, Void> {
+    private class StartWearableActivityTask extends AsyncTask<String, Void, Void> {
 
         @Override
-        protected Void doInBackground(Void... args) {
+        protected Void doInBackground(String... args) {
             Collection<String> nodes = getNodes();
+            String s = args[0]; //"asd";
             for (String node : nodes) {
-                sendStartActivityMessage(node);
+                sendStartActivityMessage(node, s);
             }
             return null;
         }

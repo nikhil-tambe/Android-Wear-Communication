@@ -1,6 +1,5 @@
 package com.nikhil.phone.ui.activities;
 
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.support.design.widget.TabLayout;
@@ -18,7 +17,7 @@ import android.view.View;
 
 import com.nikhil.phone.R;
 import com.nikhil.phone.app.ApplicationClass;
-import com.nikhil.phone.comm.DataLayerService;
+import com.nikhil.phone.comm.PhoneDataLayerListenerService;
 import com.nikhil.phone.home.SectionsPagerAdapter;
 
 public class HomeActivity extends AppCompatActivity {
@@ -47,7 +46,7 @@ public class HomeActivity extends AppCompatActivity {
 
         context = ApplicationClass.getAppContext();
 
-        startService(new Intent(context, DataLayerService.class));
+        startService(new Intent(context, PhoneDataLayerListenerService.class));
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);

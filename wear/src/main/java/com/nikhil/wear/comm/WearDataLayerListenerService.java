@@ -1,9 +1,7 @@
-package com.nikhil.wear.service;
+package com.nikhil.wear.comm;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -15,6 +13,7 @@ import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.nikhil.wear.ui.activities.MainActivity;
 
+import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 import static com.nikhil.shared.Constants.ChannelC.PATH_COUNT;
@@ -25,8 +24,8 @@ import static com.nikhil.shared.Constants.ChannelC.PATH_START_ACTIVITY;
  * Created by Nikhil on 19/7/17.
  */
 
-public class DataLayerListenerService extends WearableListenerService{
-        //implements GoogleApiClient.ConnectionCallbacks {
+public class WearDataLayerListenerService extends WearableListenerService {
+    //implements GoogleApiClient.ConnectionCallbacks {
 
     public static final String TAG = "nikhil DataListener";
     GoogleApiClient googleApiClient;
@@ -37,7 +36,6 @@ public class DataLayerListenerService extends WearableListenerService{
         Log.d(TAG, "onCreate: ");
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
-                //.addConnectionCallbacks(this)
                 .build();
 
         googleApiClient.connect();
@@ -54,7 +52,7 @@ public class DataLayerListenerService extends WearableListenerService{
             ConnectionResult connectionResult = googleApiClient
                     .blockingConnect(30, TimeUnit.SECONDS);
             if (!connectionResult.isSuccess()) {
-                Log.e(TAG, "DataLayerListenerService failed to connect to GoogleApiClient, "
+                Log.e(TAG, "WearDataLayerListenerService failed to connect to GoogleApiClient, "
                         + "error code: " + connectionResult.getErrorCode());
                 return;
             }
@@ -64,6 +62,7 @@ public class DataLayerListenerService extends WearableListenerService{
         for (DataEvent event : dataEventBuffer) {
             Uri uri = event.getDataItem().getUri();
             String path = uri.getPath();
+            Log.d(TAG, "onDataChanged: " + path);
             if (PATH_COUNT.equals(path)) {
                 // Get the node id of the node that created the data item from the host portion of
                 // the uri.
@@ -82,8 +81,12 @@ public class DataLayerListenerService extends WearableListenerService{
     public void onMessageReceived(MessageEvent messageEvent) {
         Log.d(TAG, "onMessageReceived: " + messageEvent.getPath() + ": " + messageEvent.toString());
         if (messageEvent.getPath().equals(PATH_START_ACTIVITY)) {
+            String message = new String(messageEvent.getData()); //, Charset.forName("UTF-8"));
+            Log.d(TAG, "onMessageReceived: " + message);
             Intent startIntent = new Intent(this, MainActivity.class);
+            startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
             startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startIntent.putExtra("asd", message);
             startActivity(startIntent);
         }
     }

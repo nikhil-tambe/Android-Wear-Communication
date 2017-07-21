@@ -76,6 +76,10 @@ public class MainActivity extends Activity implements
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        String s = getIntent().getStringExtra("asd");
+        Toast.makeText(this, s, Toast.LENGTH_SHORT).show();
+        Log.d(TAG, "onCreate: MESSAGE: " + s);
     }
 
     @Override
@@ -85,7 +89,7 @@ public class MainActivity extends Activity implements
         mGoogleApiClient.connect();
     }
 
-    private void checkRequiredPermissions(){
+    private void checkRequiredPermissions() {
         String[] permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BODY_SENSORS,
                 Manifest.permission.READ_PHONE_STATE};
