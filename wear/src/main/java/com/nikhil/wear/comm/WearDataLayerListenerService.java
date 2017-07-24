@@ -11,21 +11,22 @@ import com.google.android.gms.wearable.DataEventBuffer;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
+import com.nikhil.wear.sensors.SensorService;
 import com.nikhil.wear.ui.activities.MainActivity;
 
-import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 import static com.nikhil.shared.Constants.ChannelC.PATH_COUNT;
 import static com.nikhil.shared.Constants.ChannelC.PATH_DATA_ITEM_RECEIVED;
-import static com.nikhil.shared.Constants.ChannelC.PATH_START_ACTIVITY;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_APP;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_SENSOR_SERVICE;
+import static com.nikhil.shared.Constants.ChannelC.PATH_STOP_SENSOR_SERVICE;
 
 /**
  * Created by Nikhil on 19/7/17.
  */
 
 public class WearDataLayerListenerService extends WearableListenerService {
-    //implements GoogleApiClient.ConnectionCallbacks {
 
     public static final String TAG = "nikhil DataListener";
     GoogleApiClient googleApiClient;
@@ -80,24 +81,28 @@ public class WearDataLayerListenerService extends WearableListenerService {
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         Log.d(TAG, "onMessageReceived: " + messageEvent.getPath() + ": " + messageEvent.toString());
-        if (messageEvent.getPath().equals(PATH_START_ACTIVITY)) {
-            String message = new String(messageEvent.getData()); //, Charset.forName("UTF-8"));
-            Log.d(TAG, "onMessageReceived: " + message);
-            Intent startIntent = new Intent(this, MainActivity.class);
-            startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startIntent.putExtra("asd", message);
-            startActivity(startIntent);
+
+        switch (messageEvent.getPath()) {
+
+            case PATH_START_APP:
+                String message = new String(messageEvent.getData()); //, Charset.forName("UTF-8"));
+                Intent startIntent = new Intent(this, MainActivity.class);
+                startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startIntent.putExtra("asd", message);
+                startActivity(startIntent);
+                break;
+
+            case PATH_START_SENSOR_SERVICE:
+                startService(new Intent(this, SensorService.class));
+                break;
+
+            case PATH_STOP_SENSOR_SERVICE:
+                stopService(new Intent(this, SensorService.class));
+                break;
+
         }
+
     }
 
-    /*@Override
-    public void onConnected(@Nullable Bundle bundle) {
-        Log.d(TAG, "api connected onConnected: ");
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }*/
 }

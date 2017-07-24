@@ -6,19 +6,17 @@ package com.nikhil.shared;
 
 public interface Constants {
 
-    interface Capabilities {
-        String VOICE_TRANSCRIPTION_CAPABILITY_NAME = "voice_transcription";
-
-    }
-
     interface ChannelC {
-        String PATH_MESSAGE = "/actofit-mess";
-        String PATH_START_ACTIVITY = "/actofit-start-activity";
-        String PATH_COUNT = "/actofit-count";
-        String PATH_DATA_ITEM_RECEIVED = "/actofit-data-item-received";
-        String PATH_IMAGE = "/actofit-image";
+        String PATH_MESSAGE = "/mess";
+        String PATH_START_APP = "/start-app";
+        String PATH_COUNT = "/count";
+        String PATH_DATA_ITEM_RECEIVED = "/data-item-received";
+        String PATH_IMAGE = "/image";
+        String PATH_START_SENSOR_SERVICE = "/start-sensor-service";
+        String PATH_STOP_SENSOR_SERVICE = "/stop-sensor-service";
+        String PATH_SENSOR_DATA = "/sensor-data";
 
-        String KEY_IMAGE = "actofit-photo";
+        String KEY_IMAGE = "photo";
 
         String CHANNEL_SESSION = "channelSession";
         String CHANNEL_SESSION_DATE = "channelDate";
@@ -46,8 +44,20 @@ public interface Constants {
 
     interface MathC {
         int FRAME_RATE = 2;
+        // for 6 digit precision
         int p = 1000000;
         double pd = 1000000.0d;
+    }
+
+    interface DataMapKeys {
+        String ACCURACY = "accuracy";
+        String TIMESTAMP = "timestamp";
+        String VALUES = "values";
+        String FILTER = "filter";
+    }
+
+    interface GENERAL {
+        int CLIENT_CONNECTION_TIMEOUT = 15000;
     }
 
 }

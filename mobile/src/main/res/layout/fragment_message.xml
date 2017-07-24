@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/messageInput_EditText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Message" />
+
 
     <!--<Button
             android:id="@+id/sendMessage_Button"
@@ -20,6 +16,40 @@
         android:id="@+id/startApp_Button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start Wear App" />
+        android:text="Send Message" />
 
-</LinearLayout>
+    <EditText
+        android:id="@+id/messageInput_EditText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/startApp_Button"
+        android:maxLines="3"
+        android:hint="Message" />
+
+    <Button
+        android:id="@+id/startSensorOnWear_Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:layout_below="@id/messageInput_EditText"
+        android:text="Start Sensor On Wear"/>
+
+    <Button
+        android:id="@+id/stopSensorOnWear_Button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_below="@id/startSensorOnWear_Button"
+        android:text="Stop Sensor On Wear"/>
+
+    <TextView
+        android:id="@+id/sensorData_TextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/stopSensorOnWear_Button"
+        android:textSize="20sp"
+        android:gravity="center"
+        android:maxLines="3"
+        android:text="data"/>
+
+</RelativeLayout>

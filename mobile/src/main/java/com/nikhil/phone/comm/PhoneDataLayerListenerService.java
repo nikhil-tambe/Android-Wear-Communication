@@ -14,6 +14,9 @@ import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.Channel;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
@@ -22,6 +25,7 @@ import com.nikhil.phone.app.ApplicationClass;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +35,9 @@ import static com.nikhil.shared.Constants.ChannelC.CHANNEL_SESSION;
 import static com.nikhil.shared.Constants.ChannelC.CHANNEL_SESSION_DATE;
 import static com.nikhil.shared.Constants.ChannelC.PATH_DATA_ITEM_RECEIVED;
 import static com.nikhil.shared.Constants.ChannelC.PATH_MESSAGE;
+import static com.nikhil.shared.Constants.DataMapKeys.ACCURACY;
+import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
+import static com.nikhil.shared.Constants.DataMapKeys.VALUES;
 import static com.nikhil.shared.Constants.StorageC.SESSION_DATE_CSV;
 import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
 import static com.nikhil.shared.Constants.StorageC.UNKNOW_FILE_TXT;
@@ -41,7 +48,7 @@ import static com.nikhil.shared.Constants.StorageC.UNKNOW_FILE_TXT;
 
 public class PhoneDataLayerListenerService extends WearableListenerService {
 
-    private static final String TAG = "nikhil " + PhoneDataLayerListenerService.class.getSimpleName();
+    private static final String TAG = "nikhil DataLayer";
     Context context;
     GoogleApiClient googleApiClient;
     File sessionFile, dateFile, unknownFile;
@@ -66,36 +73,32 @@ public class PhoneDataLayerListenerService extends WearableListenerService {
 
     @Override
     public void onDataChanged(DataEventBuffer dataEvents) {
-        if (Log.isLoggable(TAG, Log.DEBUG)) {
-            Log.d(TAG, "onDataChanged: " + dataEvents);
-        }
 
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .build();
+        /*for (DataEvent dataEvent : dataEvents) {
+            if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+                DataItem dataItem = dataEvent.getDataItem();
+                Uri uri = dataItem.getUri();
+                String path = uri.getPath();
 
-        ConnectionResult connectionResult =
-                googleApiClient.blockingConnect(30, TimeUnit.SECONDS);
+                if (path.startsWith("/sensors/")) {
+                    unpackSensorData(
+                            Integer.parseInt(uri.getLastPathSegment()),
+                            DataMapItem.fromDataItem(dataItem).getDataMap()
+                    );
+                }
+            }
+        }*/
+        
+    }
 
-        if (!connectionResult.isSuccess()) {
-            Log.e(TAG, "Failed to connect to GoogleApiClient.");
-            return;
-        }
+    private void unpackSensorData(int sensorType, DataMap dataMap) {
+        int accuracy = dataMap.getInt(ACCURACY);
+        long timestamp = dataMap.getLong(TIMESTAMP);
+        float[] values = dataMap.getFloatArray(VALUES);
 
-        // Loop through the events and send a message
-        // to the node that created the data item.
-        for (DataEvent event : dataEvents) {
-            Uri uri = event.getDataItem().getUri();
+        Log.d(TAG, "Received sensor data " + sensorType + " = " + Arrays.toString(values));
 
-            // Get the node id from the host value of the URI
-            String nodeId = uri.getHost();
-            // Set the data of the message to be the bytes of the URI
-            byte[] payload = uri.toString().getBytes();
-
-            // Send the RPC
-            Wearable.MessageApi.sendMessage(googleApiClient, nodeId,
-                    PATH_DATA_ITEM_RECEIVED, payload);
-        }
+        //sensorManager.addSensorData(sensorType, accuracy, timestamp, values);
     }
 
     @Override

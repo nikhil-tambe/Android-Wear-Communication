@@ -250,7 +250,7 @@ public class MainActivity extends Activity implements
 
     @Override
     public void onMessageReceived(MessageEvent event) {
-        Log.d(TAG, "onMessageReceived: " + event.toString());
+        //Log.d(TAG, "onMessageReceived: " + event.toString());
         //mDataFragment.appendItem("Message", event.toString());
     }
 

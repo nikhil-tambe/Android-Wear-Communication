@@ -20,6 +20,9 @@ import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataApi;
 import com.google.android.gms.wearable.DataEvent;
 import com.google.android.gms.wearable.DataEventBuffer;
+import com.google.android.gms.wearable.DataItem;
+import com.google.android.gms.wearable.DataMap;
+import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Node;
@@ -27,7 +30,7 @@ import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
 
-import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 
@@ -35,7 +38,13 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import static com.nikhil.shared.Constants.ChannelC.PATH_START_ACTIVITY;
+import static com.nikhil.shared.Constants.ChannelC.PATH_SENSOR_DATA;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_APP;
+import static com.nikhil.shared.Constants.ChannelC.PATH_START_SENSOR_SERVICE;
+import static com.nikhil.shared.Constants.ChannelC.PATH_STOP_SENSOR_SERVICE;
+import static com.nikhil.shared.Constants.DataMapKeys.ACCURACY;
+import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
+import static com.nikhil.shared.Constants.DataMapKeys.VALUES;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
 
 /**
@@ -55,6 +64,7 @@ public class CommActivity extends AppCompatActivity
     EditText messageInput_EditText;
     @BindView(R.id.startApp_Button)
     Button startApp_Button;
+    String path;
     private boolean resolvingError = false;
 
     @Override
@@ -84,8 +94,21 @@ public class CommActivity extends AppCompatActivity
     }
 
     @OnClick(R.id.startApp_Button)
-    public void startApp_ButtonClicked() {
+    public void startAppButton_Clicked() {
+        path = PATH_START_APP;
         new StartWearableActivityTask().execute(messageInput_EditText.getText().toString());
+    }
+
+    @OnClick(R.id.startSensorOnWear_Button)
+    public void startSensorButtonClicked() {
+        path = PATH_START_SENSOR_SERVICE;
+        new StartWearableActivityTask().execute("start-sensor-service");
+    }
+
+    @OnClick(R.id.stopSensorOnWear_Button)
+    public void stopSensorButtonClicked() {
+        path = PATH_STOP_SENSOR_SERVICE;
+        new StartWearableActivityTask().execute("stop-sensor-service");
     }
 
     @Override
@@ -134,11 +157,18 @@ public class CommActivity extends AppCompatActivity
 
     @Override
     public void onDataChanged(DataEventBuffer dataEventBuffer) {
-        for (DataEvent event : dataEventBuffer) {
-            if (event.getType() == DataEvent.TYPE_CHANGED) {
-                Log.d(TAG, "onDataChanged: DataItem Changed: " + event.getDataItem().toString());
-            } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                Log.d(TAG, "onDataChanged: DataItem Deleted: " + event.getDataItem().toString());
+        for (DataEvent dataEvent : dataEventBuffer) {
+            if (dataEvent.getType() == DataEvent.TYPE_CHANGED) {
+                DataItem dataItem = dataEvent.getDataItem();
+                Uri uri = dataItem.getUri();
+                String path = uri.getPath();
+
+                if (path.startsWith(PATH_SENSOR_DATA + "/")) {
+                    unpackSensorData(
+                            Integer.parseInt(uri.getLastPathSegment()),
+                            DataMapItem.fromDataItem(dataItem).getDataMap()
+                    );
+                }
             }
         }
     }
@@ -146,6 +176,16 @@ public class CommActivity extends AppCompatActivity
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
         Log.d(TAG, "onMessageReceived: Message from watch: " + messageEvent.toString());
+    }
+
+    private void unpackSensorData(int sensorType, DataMap dataMap) {
+        int accuracy = dataMap.getInt(ACCURACY);
+        long timestamp = dataMap.getLong(TIMESTAMP);
+        float[] values = dataMap.getFloatArray(VALUES);
+
+        Log.d(TAG, "Received sensor data " + sensorType + " = " + Arrays.toString(values));
+
+        //sensorManager.addSensorData(sensorType, accuracy, timestamp, values);
     }
 
     private Collection<String> getNodes() {
@@ -166,7 +206,8 @@ public class CommActivity extends AppCompatActivity
 
         byte[] message = s.getBytes(); //Charset.forName("UTF-8"));
 
-        Wearable.MessageApi.sendMessage(googleApiClient, node, PATH_START_ACTIVITY, message)
+        Wearable.MessageApi
+                .sendMessage(googleApiClient, node, path, message)
                 .setResultCallback(
                         new ResultCallback<MessageApi.SendMessageResult>() {
                             @Override
