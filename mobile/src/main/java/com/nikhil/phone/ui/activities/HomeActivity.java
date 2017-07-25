@@ -1,23 +1,20 @@
 package com.nikhil.phone.ui.activities;
 
 import android.content.Context;
-import android.content.Intent;
-import android.support.design.widget.TabLayout;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.nikhil.phone.R;
 import com.nikhil.phone.app.ApplicationClass;
-import com.nikhil.phone.comm.PhoneDataLayerListenerService;
 import com.nikhil.phone.home.SectionsPagerAdapter;
 
 public class HomeActivity extends AppCompatActivity {
@@ -45,8 +42,6 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         context = ApplicationClass.getAppContext();
-
-        startService(new Intent(context, PhoneDataLayerListenerService.class));
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -100,18 +95,18 @@ public class HomeActivity extends AppCompatActivity {
      */
     /*public static class PlaceholderFragment extends Fragment {
         *//**
-         * The fragment argument representing the section number for this
-         * fragment.
-         *//*
+     * The fragment argument representing the section number for this
+     * fragment.
+     *//*
         private static final String ARG_SECTION_NUMBER = "section_number";
 
         public PlaceholderFragment() {
         }
 
         *//**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         *//*
+     * Returns a new instance of this fragment for the given section
+     * number.
+     *//*
         public static PlaceholderFragment newInstance(int sectionNumber) {
             PlaceholderFragment fragment = new PlaceholderFragment();
             Bundle args = new Bundle();

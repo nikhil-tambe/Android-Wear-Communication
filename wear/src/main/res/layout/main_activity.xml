@@ -5,20 +5,18 @@
     android:id="@+id/main_activity_layout">
 
     <Button
-        android:id="@+id/one"
+        android:id="@+id/openOnPhone_Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:onClick="onClicked"
-        android:text="Capability"/>
+        android:text="Open On Phone"/>
 
     <Button
-        android:id="@+id/two"
+        android:id="@+id/gotoSensors_Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/one"
+        android:layout_below="@id/openOnPhone_Button"
         android:layout_centerInParent="true"
-        android:onClick="onClicked"
-        android:text="Sensors"/>
+        android:text="Go To Sensors"/>
 
 </RelativeLayout>

@@ -89,7 +89,7 @@ public class WearDataLayerListenerService extends WearableListenerService {
                 Intent startIntent = new Intent(this, MainActivity.class);
                 startIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 startIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                startIntent.putExtra("asd", message);
+                startIntent.putExtra(PATH_START_APP, message);
                 startActivity(startIntent);
                 break;
 

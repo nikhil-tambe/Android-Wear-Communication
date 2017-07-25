@@ -11,8 +11,12 @@ import android.support.annotation.Nullable;
 import android.support.compat.BuildConfig;
 import android.util.Log;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import static com.nikhil.shared.Constants.MathC.p;
+import static com.nikhil.shared.Constants.MathC.pd;
 
 /**
  * Created by Nikhil on 24/7/17.
@@ -24,6 +28,10 @@ public class SensorService extends Service implements SensorEventListener {
     SensorManager sensorManager;
     Sensor accelerometerSensor, gyroscopeSensor, hearRateSensor;
     SendSensorData sendSensorData;
+    String acc_data = "0,0,0";
+    String gyro_data = "0,0,0";
+    String hr_data = "72.0";
+
 
     @Override
     public void onCreate() {
@@ -48,11 +56,32 @@ public class SensorService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
+
+        if (event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
+            return; // If sensor is unreliable, then just return
+        }
+        Sensor sensor = event.sensor;
+        if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            acc_data = togglePrecision(event.values[0]) + ","
+                    + togglePrecision(event.values[1]) + ","
+                    + togglePrecision(event.values[2]);
+        }
+        if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+            gyro_data = togglePrecision(event.values[0]) + ","
+                    + togglePrecision(event.values[1]) + ","
+                    + togglePrecision(event.values[2]);
+        }
+        if (sensor.getType() == Sensor.TYPE_HEART_RATE) {
+            hr_data = Float.toString(event.values[0]);
+        }
+
+        String[] data = new String[] {acc_data, gyro_data , hr_data};
+
         sendSensorData.sendData(
                 event.sensor.getType(),
                 event.accuracy,
                 event.timestamp,
-                event.values);
+                data);
     }
 
     @Override
@@ -108,5 +137,9 @@ public class SensorService extends Service implements SensorEventListener {
                     sensor.getName(), sensor.getStringType(), sensor.getType()));
         }
         Log.d(TAG, "=== LIST AVAILABLE SENSORS ===");
+    }
+
+    private double togglePrecision(float d) {
+        return Math.round(d * p) / pd;
     }
 }

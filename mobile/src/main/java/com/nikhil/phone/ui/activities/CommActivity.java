@@ -1,20 +1,23 @@
 package com.nikhil.phone.ui.activities;
 
+import android.Manifest;
 import android.content.IntentSender;
+import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
 import com.google.android.gms.wearable.DataApi;
@@ -25,14 +28,10 @@ import com.google.android.gms.wearable.DataMap;
 import com.google.android.gms.wearable.DataMapItem;
 import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
-import com.google.android.gms.wearable.Node;
-import com.google.android.gms.wearable.NodeApi;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
+import com.nikhil.phone.comm.SendMessageAsyncTask;
+import com.nikhil.shared.CheckConnection;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -43,8 +42,11 @@ import static com.nikhil.shared.Constants.ChannelC.PATH_START_APP;
 import static com.nikhil.shared.Constants.ChannelC.PATH_START_SENSOR_SERVICE;
 import static com.nikhil.shared.Constants.ChannelC.PATH_STOP_SENSOR_SERVICE;
 import static com.nikhil.shared.Constants.DataMapKeys.ACCURACY;
+import static com.nikhil.shared.Constants.DataMapKeys.ACC_VALUES;
+import static com.nikhil.shared.Constants.DataMapKeys.GYRO_VALUES;
+import static com.nikhil.shared.Constants.DataMapKeys.HR_VALUES;
 import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
-import static com.nikhil.shared.Constants.DataMapKeys.VALUES;
+import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
 
 /**
@@ -64,7 +66,12 @@ public class CommActivity extends AppCompatActivity
     EditText messageInput_EditText;
     @BindView(R.id.startApp_Button)
     Button startApp_Button;
-    String path;
+    @BindView(R.id.sensorAccData_TextView)
+    TextView sensorAccData_TextView;
+    @BindView(R.id.sensorGyroData_TextView)
+    TextView sensorGyroData_TextView;
+    @BindView(R.id.sensorHRData_TextView)
+    TextView sensorHRData_TextView;
     private boolean resolvingError = false;
 
     @Override
@@ -73,8 +80,6 @@ public class CommActivity extends AppCompatActivity
         setContentView(R.layout.fragment_message);
 
         ButterKnife.bind(this);
-
-        //startService(new Intent(this, PhoneDataLayerListenerService.class));
 
         googleApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -91,24 +96,35 @@ public class CommActivity extends AppCompatActivity
         } else {
             Log.d(TAG, "onStart: Resolving Error " + resolvingError);
         }
+        checkRequiredPermissions();
+        CheckConnection checkConnection = new CheckConnection(this);
+        if (!checkConnection.checkBTConnection()) {
+            checkConnection.enableBluetooth();
+        }
     }
 
     @OnClick(R.id.startApp_Button)
     public void startAppButton_Clicked() {
-        path = PATH_START_APP;
-        new StartWearableActivityTask().execute(messageInput_EditText.getText().toString());
+        new SendMessageAsyncTask(googleApiClient, PATH_START_APP)
+                .execute(messageInput_EditText.getText().toString());
     }
 
     @OnClick(R.id.startSensorOnWear_Button)
     public void startSensorButtonClicked() {
-        path = PATH_START_SENSOR_SERVICE;
-        new StartWearableActivityTask().execute("start-sensor-service");
+        new SendMessageAsyncTask(googleApiClient, PATH_START_SENSOR_SERVICE)
+                .execute("message-start-sensor-service");
     }
 
     @OnClick(R.id.stopSensorOnWear_Button)
     public void stopSensorButtonClicked() {
-        path = PATH_STOP_SENSOR_SERVICE;
-        new StartWearableActivityTask().execute("stop-sensor-service");
+        new SendMessageAsyncTask(googleApiClient, PATH_STOP_SENSOR_SERVICE)
+                .execute("message-stop-sensor-service");
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                setSensorTextView("", "", "");
+            }
+        }, 1000);
     }
 
     @Override
@@ -178,61 +194,46 @@ public class CommActivity extends AppCompatActivity
         Log.d(TAG, "onMessageReceived: Message from watch: " + messageEvent.toString());
     }
 
+    private void checkRequiredPermissions() {
+        String[] permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BODY_SENSORS,
+                Manifest.permission.READ_PHONE_STATE};
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.BODY_SENSORS) != PackageManager.PERMISSION_GRANTED ||
+                    checkSelfPermission(Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(permissions, REQUEST_CODE_GROUP_PERMISSIONS);
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_GROUP_PERMISSIONS) {
+            for (int resultStatus : grantResults) {
+                if (resultStatus == PackageManager.PERMISSION_DENIED) {
+                    finish();
+                }
+            }
+        }
+    }
+
     private void unpackSensorData(int sensorType, DataMap dataMap) {
         int accuracy = dataMap.getInt(ACCURACY);
         long timestamp = dataMap.getLong(TIMESTAMP);
-        float[] values = dataMap.getFloatArray(VALUES);
+        String acc_values = dataMap.getString(ACC_VALUES);
+        String gyro_values = dataMap.getString(GYRO_VALUES);
+        String hr_values = dataMap.getString(HR_VALUES);
 
-        Log.d(TAG, "Received sensor data " + sensorType + " = " + Arrays.toString(values));
-
-        //sensorManager.addSensorData(sensorType, accuracy, timestamp, values);
+        setSensorTextView(acc_values, gyro_values, hr_values);
     }
 
-    private Collection<String> getNodes() {
-        HashSet<String> results = new HashSet<>();
-        NodeApi.GetConnectedNodesResult nodes =
-                Wearable.NodeApi.getConnectedNodes(googleApiClient).await();
-
-        for (Node node : nodes.getNodes()) {
-            Log.d(TAG, "getNodes: " + node.getId()
-                    + ": " + node.getDisplayName() + ": " + node.isNearby());
-            results.add(node.getId());
-        }
-
-        return results;
+    public void setSensorTextView(String acc_values, String gyro_values, String hr_values) {
+        sensorAccData_TextView.setText(acc_values);
+        sensorGyroData_TextView.setText(gyro_values);
+        sensorHRData_TextView.setText(hr_values);
     }
 
-    private void sendStartActivityMessage(final String node, String s) {
-
-        byte[] message = s.getBytes(); //Charset.forName("UTF-8"));
-
-        Wearable.MessageApi
-                .sendMessage(googleApiClient, node, path, message)
-                .setResultCallback(
-                        new ResultCallback<MessageApi.SendMessageResult>() {
-                            @Override
-                            public void onResult(MessageApi.SendMessageResult sendMessageResult) {
-                                if (!sendMessageResult.getStatus().isSuccess()) {
-                                    Log.e(TAG, "Failed to send message with status code: "
-                                            + sendMessageResult.getStatus().getStatusCode());
-                                } else {
-                                    Log.d(TAG, "onResult: message sent to " + node);
-                                }
-                            }
-                        }
-                );
-    }
-
-    private class StartWearableActivityTask extends AsyncTask<String, Void, Void> {
-
-        @Override
-        protected Void doInBackground(String... args) {
-            Collection<String> nodes = getNodes();
-            String s = args[0]; //"asd";
-            for (String node : nodes) {
-                sendStartActivityMessage(node, s);
-            }
-            return null;
-        }
-    }
 }

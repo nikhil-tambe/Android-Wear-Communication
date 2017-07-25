@@ -35,6 +35,10 @@ public interface Constants {
         String SESSION_LOG_CSV = "/session_log.csv";
         String SESSION_DATE_CSV = "/session_date.csv";
         String UNKNOW_FILE_TXT = "/unknown.txt";
+
+        String SESSION_LOG_PREFIX = "/session_";
+        String SESSION_DATE_PREFIX = "/sessionDate_";
+        String UNKNOWN_PREFIX = "/unknown_";
     }
 
     interface IntentC {
@@ -52,12 +56,15 @@ public interface Constants {
     interface DataMapKeys {
         String ACCURACY = "accuracy";
         String TIMESTAMP = "timestamp";
-        String VALUES = "values";
+        String ACC_VALUES = "acc_values";
+        String GYRO_VALUES = "gyro_values";
+        String HR_VALUES = "hr_values";
         String FILTER = "filter";
     }
 
     interface GENERAL {
         int CLIENT_CONNECTION_TIMEOUT = 15000;
+        String REVERSE_DATE_FORMAT = "yyyyMMddkkmmss";
     }
 
 }

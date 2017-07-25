@@ -12,15 +12,16 @@ import com.google.android.gms.wearable.PutDataMapRequest;
 import com.google.android.gms.wearable.PutDataRequest;
 import com.google.android.gms.wearable.Wearable;
 
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static com.nikhil.shared.Constants.ChannelC.PATH_SENSOR_DATA;
 import static com.nikhil.shared.Constants.DataMapKeys.ACCURACY;
+import static com.nikhil.shared.Constants.DataMapKeys.ACC_VALUES;
+import static com.nikhil.shared.Constants.DataMapKeys.GYRO_VALUES;
+import static com.nikhil.shared.Constants.DataMapKeys.HR_VALUES;
 import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
-import static com.nikhil.shared.Constants.DataMapKeys.VALUES;
 import static com.nikhil.shared.Constants.GENERAL.CLIENT_CONNECTION_TIMEOUT;
 
 /**
@@ -53,7 +54,7 @@ public class SendSensorData {
     public void sendData(final int sensorType,
                          final int accuracy,
                          final long timestamp,
-                         final float[] values) {
+                         final String[] values) {
 
         long t = System.currentTimeMillis();
 
@@ -80,15 +81,17 @@ public class SendSensorData {
         });
     }
 
-    private void sendSensorDataInBackground(int sensorType, int accuracy, long timestamp, float[] values) {
+    private void sendSensorDataInBackground(int sensorType, int accuracy, long timestamp, String[] values) {
 
-        Log.d(TAG, "Sensor " + sensorType + " = " + Arrays.toString(values));
+        Log.d(TAG, "Sensor " + sensorType + " = " + values[0] + values[1] + values[2]);
 
         PutDataMapRequest dataMap = PutDataMapRequest.create(PATH_SENSOR_DATA + "/" + sensorType);
 
         dataMap.getDataMap().putInt(ACCURACY, accuracy);
         dataMap.getDataMap().putLong(TIMESTAMP, timestamp);
-        dataMap.getDataMap().putFloatArray(VALUES, values);
+        dataMap.getDataMap().putString(ACC_VALUES, values[0]);
+        dataMap.getDataMap().putString(GYRO_VALUES, values[1]);
+        dataMap.getDataMap().putString(HR_VALUES, values[2]);
 
         PutDataRequest putDataRequest = dataMap.asPutDataRequest();
         send(putDataRequest);
@@ -101,7 +104,7 @@ public class SendSensorData {
                     .setResultCallback(new ResultCallback<DataApi.DataItemResult>() {
                         @Override
                         public void onResult(DataApi.DataItemResult dataItemResult) {
-                            Log.v(TAG, "Sending sensor data: " + dataItemResult.getStatus().isSuccess());
+                            //Log.v(TAG, "Sending sensor data: " + dataItemResult.getStatus().isSuccess());
                         }
                     });
         }
