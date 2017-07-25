@@ -50,7 +50,6 @@
                 <data
                     android:host="*"
                     android:scheme="wear" />
-                <data android:pathPrefix="channelSession" />
             </intent-filter>
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />

@@ -132,10 +132,7 @@ public class CommActivity extends AppCompatActivity
         Toast.makeText(this, "API Connected", Toast.LENGTH_SHORT).show();
         resolvingError = false;
         startApp_Button.setEnabled(true);
-        Wearable.DataApi.addListener(googleApiClient, this);
-        Wearable.MessageApi.addListener(googleApiClient, this);
-        Wearable.CapabilityApi.addListener(
-                googleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
+        addListeners();
     }
 
     @Override
@@ -159,9 +156,7 @@ public class CommActivity extends AppCompatActivity
                 Log.e(TAG, "Connection to Google API client has failed");
                 resolvingError = false;
                 startApp_Button.setEnabled(false);
-                Wearable.DataApi.removeListener(googleApiClient, this);
-                Wearable.MessageApi.removeListener(googleApiClient, this);
-                Wearable.CapabilityApi.removeListener(googleApiClient, this);
+                removeListeners();
             }
         }
     }
@@ -196,7 +191,8 @@ public class CommActivity extends AppCompatActivity
 
     private void checkRequiredPermissions() {
         String[] permissions = new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.BODY_SENSORS,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.BODY_SENSORS,
                 Manifest.permission.READ_PHONE_STATE};
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
@@ -218,6 +214,19 @@ public class CommActivity extends AppCompatActivity
                 }
             }
         }
+    }
+
+    private void addListeners() {
+        Wearable.DataApi.addListener(googleApiClient, this);
+        Wearable.MessageApi.addListener(googleApiClient, this);
+        Wearable.CapabilityApi.addListener(
+                googleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
+    }
+
+    private void removeListeners() {
+        Wearable.DataApi.removeListener(googleApiClient, this);
+        Wearable.MessageApi.removeListener(googleApiClient, this);
+        Wearable.CapabilityApi.removeListener(googleApiClient, this);
     }
 
     private void unpackSensorData(int sensorType, DataMap dataMap) {

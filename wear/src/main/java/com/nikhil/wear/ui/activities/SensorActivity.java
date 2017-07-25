@@ -74,7 +74,6 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
 
         context = this;
         ButterKnife.bind(this);
-
     }
 
     @Override
@@ -128,9 +127,6 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
 
         writeLog(data);
 
-        /*if (SENSOR_STOP) {
-            unregisterSensor();
-        }*/
     }
 
     @Override
@@ -144,7 +140,6 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
         stopSensor_Button.setVisibility(View.VISIBLE);
         sendFile_Button.setVisibility(View.GONE);
         registerSensor();
-        //startTimer();
     }
 
     @OnClick(R.id.stopSensor_Button)
@@ -153,7 +148,6 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
         stopSensor_Button.setVisibility(View.GONE);
         sendFile_Button.setVisibility(View.VISIBLE);
         unregisterSensor();
-        //stopTimer();
     }
 
     @OnClick(R.id.sendFile_Button)

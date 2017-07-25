@@ -26,7 +26,6 @@ public class CheckConnection {
     }
 
     public boolean isBluetoothAvailable() {
-
         return (bluetoothAdapter != null && bluetoothAdapter.isEnabled());
     }
 

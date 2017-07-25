@@ -3,7 +3,9 @@ package com.nikhil.phone.comm;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,7 +40,8 @@ import static com.nikhil.shared.Constants.StorageC.UNKNOW_FILE_TXT;
  * Created by Nikhil on 19/7/17.
  */
 
-public class PhoneDataLayerListenerService extends WearableListenerService {
+public class PhoneDataLayerListenerService extends WearableListenerService
+        implements GoogleApiClient.ConnectionCallbacks {
 
     private static final String TAG = "nikhil DataLayer";
     Context context;
@@ -121,10 +124,6 @@ public class PhoneDataLayerListenerService extends WearableListenerService {
                     @Override
                     public void onResult(@NonNull Status status) {
                         Log.d(TAG, "onResult: " + file.getName() + " : " + status);
-                        Toast.makeText(context,
-                                file.getName() + " received. " + status,
-                                Toast.LENGTH_SHORT).show();
-                        renameFile(channel.getPath(), file);
                     }
                 });
     }
@@ -157,7 +156,22 @@ public class PhoneDataLayerListenerService extends WearableListenerService {
 
     @Override
     public void onInputClosed(Channel channel, int i, int i1) {
-        Log.d(TAG, "onInputClosed: " + channel.getPath());
+        String path = channel.getPath();
+        Log.d(TAG, "onInputClosed: " + path);
+        switch (path) {
+
+            case CHANNEL_SESSION:
+                renameFile(path, sessionFile);
+                break;
+
+            case CHANNEL_SESSION_DATE:
+                renameFile(path, dateFile);
+                break;
+
+            default:
+                renameFile(path, unknownFile);
+
+        }
     }
 
     @Override
@@ -165,4 +179,14 @@ public class PhoneDataLayerListenerService extends WearableListenerService {
         Log.d(TAG, "onOutputClosed: " + channel.getPath());
     }
 
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.d(TAG, "onConnected: ");
+        Wearable.ChannelApi.addListener(googleApiClient, this);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
 }

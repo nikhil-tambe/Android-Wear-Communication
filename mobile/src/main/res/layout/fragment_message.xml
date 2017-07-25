@@ -4,18 +4,11 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-
-    <!--<Button
-            android:id="@+id/sendMessage_Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Send Message" />-->
-
     <EditText
         android:id="@+id/messageInput_EditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Message"
+        android:hint="@string/attach_message"
         android:maxLines="3" />
 
     <Button
@@ -23,7 +16,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/messageInput_EditText"
-        android:text="Send Message" />
+        android:text="@string/start_wear_app" />
 
     <Button
         android:id="@+id/startSensorOnWear_Button"
@@ -31,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/startApp_Button"
         android:layout_marginTop="40dp"
-        android:text="Start Sensor On Wear" />
+        android:text="@string/start_sensor_on_wear" />
 
     <Button
         android:id="@+id/stopSensorOnWear_Button"
@@ -39,7 +32,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/startSensorOnWear_Button"
         android:layout_marginTop="5dp"
-        android:text="Stop Sensor On Wear" />
+        android:text="@string/stop_sensor_on_wear" />
 
     <LinearLayout
         android:id="@+id/acc_layout"
@@ -52,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Accelerometer: " />
+            android:text="@string/accelerometer" />
 
         <TextView
             android:id="@+id/sensorAccData_TextView"
@@ -73,7 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="Gyroscope: " />
+            android:text="@string/gyroscope" />
 
         <TextView
             android:id="@+id/sensorGyroData_TextView"
@@ -94,7 +87,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:text="HeartRate: " />
+            android:text="@string/heart_rate" />
 
         <TextView
             android:id="@+id/sensorHRData_TextView"

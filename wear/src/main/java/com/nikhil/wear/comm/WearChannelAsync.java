@@ -3,12 +3,12 @@ package com.nikhil.wear.comm;
 import android.content.Context;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.Channel;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.wearable.ChannelApi;
 import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.NodeApi;
@@ -23,8 +23,7 @@ import static com.nikhil.wear.comm.WearDataLayerListenerService.TAG;
  * Created by Nikhil on 21/7/17.
  */
 
-public class WearChannelAsync extends AsyncTask<String, Integer, String>
-        implements GoogleApiClient.ConnectionCallbacks {
+public class WearChannelAsync extends AsyncTask<String, Integer, String> {
 
     private Context context;
     private Uri uri;
@@ -35,6 +34,10 @@ public class WearChannelAsync extends AsyncTask<String, Integer, String>
         this.context = context;
         this.uri = uri;
         this.channelName = channelName;
+        googleApiClient = new GoogleApiClient.Builder(context)
+                .addApi(Wearable.API)
+                .build();
+        googleApiClient.connect();
     }
 
     @Override
@@ -44,17 +47,18 @@ public class WearChannelAsync extends AsyncTask<String, Integer, String>
 
     @Override
     protected String doInBackground(String... strings) {
-        googleApiClient = new GoogleApiClient.Builder(context)
-                .addApi(Wearable.API)
-                .build();
-        googleApiClient.connect();
-
         Collection<String> nodes = getNodes();
+        Log.d(TAG, "doInBackground: called");
         for (String node : nodes) {
             ChannelApi.OpenChannelResult result = Wearable.ChannelApi
                     .openChannel(googleApiClient, node, channelName).await();
-            Channel channel = result.getChannel();
-            channel.sendFile(googleApiClient, uri).await();
+            result.getChannel()
+                    .sendFile(googleApiClient, uri).setResultCallback(new ResultCallback<com.google.android.gms.common.api.Status>() {
+                @Override
+                public void onResult(@NonNull com.google.android.gms.common.api.Status status) {
+                    Log.d(TAG, "onResult: " + status.getStatus() + ": " + status.toString());
+                }
+            });
         }
 
         return null;
@@ -63,16 +67,6 @@ public class WearChannelAsync extends AsyncTask<String, Integer, String>
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
     }
 
     private Collection<String> getNodes() {
