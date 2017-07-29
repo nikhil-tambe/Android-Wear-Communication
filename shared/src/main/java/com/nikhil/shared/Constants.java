@@ -6,6 +6,10 @@ package com.nikhil.shared;
 
 public interface Constants {
 
+    interface LibNames {
+        String MY_NATIVE_LIB_NAME = "native-lib";
+    }
+
     interface ChannelC {
         String PATH_MESSAGE = "/mess";
         String PATH_START_APP = "/start-app";

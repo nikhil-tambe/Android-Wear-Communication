@@ -85,7 +85,7 @@ public class SendSensorData {
 
         Log.d(TAG, "Sensor " + sensorType + " = " + values[0] + values[1] + values[2]);
 
-        PutDataMapRequest dataMap = PutDataMapRequest.create(PATH_SENSOR_DATA + "/" + sensorType);
+        PutDataMapRequest dataMap = PutDataMapRequest.create(PATH_SENSOR_DATA); // + "/" + sensorType);
 
         dataMap.getDataMap().putInt(ACCURACY, accuracy);
         dataMap.getDataMap().putLong(TIMESTAMP, timestamp);
@@ -107,6 +107,8 @@ public class SendSensorData {
                             //Log.v(TAG, "Sending sensor data: " + dataItemResult.getStatus().isSuccess());
                         }
                     });
+        } else {
+            Log.e(TAG, "send: invalid connection");
         }
     }
 

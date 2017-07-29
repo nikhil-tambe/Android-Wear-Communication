@@ -1,0 +1,8 @@
+//
+// Created by actofit-android on 28/7/17.
+//
+
+#ifndef WEARCOMMUNICATION_NATIVE_LIB_H
+#define WEARCOMMUNICATION_NATIVE_LIB_H
+
+#endif //WEARCOMMUNICATION_NATIVE_LIB_H

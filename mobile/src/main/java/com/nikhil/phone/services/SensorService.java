@@ -1,4 +1,4 @@
-package com.nikhil.wear.sensors;
+package com.nikhil.phone.services;
 
 import android.app.Service;
 import android.content.Intent;
@@ -8,36 +8,42 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
-import android.support.compat.BuildConfig;
 import android.util.Log;
+import android.widget.Toast;
 
-import java.util.Date;
+import com.nikhil.phone.callnative.CallNativeFunctions;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
 import static com.nikhil.shared.Constants.MathC.p;
 import static com.nikhil.shared.Constants.MathC.pd;
+import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
 
 /**
- * Created by Nikhil on 24/7/17.
+ * Created by Nikhil on 28/7/17.
  */
 
 public class SensorService extends Service implements SensorEventListener {
 
     public static final String TAG = "nikhil " + SensorService.class.getSimpleName();
     SensorManager sensorManager;
-    Sensor accelerometerSensor, gyroscopeSensor, hearRateSensor;
-    SendSensorData sendSensorData;
+    Sensor accelerometerSensor;
     String acc_data = "0,0,0";
     String gyro_data = "0,0,0";
     String hr_data = "72.0";
+    File sessionCSV;
+    FileWriter mFileWriter;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate: ");
-        sendSensorData = SendSensorData.getInstance(this);
+        createFiles();
         registerAvailableSensors();
     }
 
@@ -56,36 +62,41 @@ public class SensorService extends Service implements SensorEventListener {
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-
-        /*if (event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
-            return; // If sensor is unreliable, then just return
-        }*/
         Sensor sensor = event.sensor;
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            acc_data = togglePrecision(event.values[0]) + ","
-                    + togglePrecision(event.values[1]) + ","
-                    + togglePrecision(event.values[2]);
-        }
-        if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            gyro_data = togglePrecision(event.values[0]) + ","
-                    + togglePrecision(event.values[1]) + ","
-                    + togglePrecision(event.values[2]);
-        }
-        if (sensor.getType() == Sensor.TYPE_HEART_RATE) {
-            hr_data = Float.toString(event.values[0]);
+
+            double x = togglePrecision(event.values[0]);
+            double y = togglePrecision(event.values[1]);
+            double z = togglePrecision(event.values[2]);
+
+            acc_data = x + "," + y + "," + z;
+
+            double magValue = CallNativeFunctions.calculateMag(x, y, z);
+
+            writeLog(acc_data + "," + magValue);
         }
 
-        String[] data = new String[] {acc_data, gyro_data , hr_data};
-
-        sendSensorData.sendData(
-                event.sensor.getType(),
-                event.accuracy,
-                event.timestamp,
-                data);
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    private void createFiles() {
+        Log.d(TAG, "createFiles: ");
+        try {
+            sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+            if (sessionCSV.exists()) {
+                sessionCSV.delete();
+                sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+                Log.d(TAG, "createFiles: " + sessionCSV.createNewFile());
+            }
+            mFileWriter = new FileWriter(sessionCSV, true);
+        } catch (Exception e) {
+            Toast.makeText(this, "writer error", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
 
     }
 
@@ -96,15 +107,15 @@ public class SensorService extends Service implements SensorEventListener {
 
         if (sensorManager != null) {
             accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            hearRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);
+            /*gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+            hearRateSensor = sensorManager.getDefaultSensor(Sensor.TYPE_HEART_RATE);*/
 
             if (accelerometerSensor != null) {
                 sensorManager.registerListener(this, accelerometerSensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
             }
 
-            if (gyroscopeSensor != null) {
+            /*if (gyroscopeSensor != null) {
                 sensorManager.registerListener(this, gyroscopeSensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
             }
@@ -112,13 +123,26 @@ public class SensorService extends Service implements SensorEventListener {
             if (hearRateSensor != null) {
                 sensorManager.registerListener(this, gyroscopeSensor,
                         SensorManager.SENSOR_DELAY_NORMAL);
-            }
+            }*/
         }
     }
 
     private void unregisterAvailableSensors() {
         if (sensorManager != null) {
             sensorManager.unregisterListener(this);
+        }
+    }
+
+    private void writeLog(String data) {
+        try {
+            mFileWriter = new FileWriter(sessionCSV, true);
+            mFileWriter.append(data);
+            mFileWriter.append("\n");
+            mFileWriter.close();
+            Log.d(TAG, "writeLog() Sensor Data: " + data);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "IO Exception NN: " + e.toString());
         }
     }
 

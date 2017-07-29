@@ -31,7 +31,12 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
 import com.nikhil.phone.comm.SendMessageAsyncTask;
+import com.nikhil.phone.callnative.CallNativeFunctions;
 import com.nikhil.shared.CheckConnection;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -48,6 +53,7 @@ import static com.nikhil.shared.Constants.DataMapKeys.HR_VALUES;
 import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
+import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
 
 /**
  * Created by Nikhil on 19/7/17.
@@ -72,6 +78,8 @@ public class CommActivity extends AppCompatActivity
     TextView sensorGyroData_TextView;
     @BindView(R.id.sensorHRData_TextView)
     TextView sensorHRData_TextView;
+    File sessionCSV;
+    FileWriter mFileWriter;
     private boolean resolvingError = false;
 
     @Override
@@ -86,6 +94,9 @@ public class CommActivity extends AppCompatActivity
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .build();
+
+        Log.d(TAG, "onCreate: " + CallNativeFunctions.helloWorld());
+
     }
 
     @Override
@@ -111,12 +122,19 @@ public class CommActivity extends AppCompatActivity
 
     @OnClick(R.id.startSensorOnWear_Button)
     public void startSensorButtonClicked() {
+        Log.d(TAG, "startSensorButtonClicked: ");
+        /*Intent sensorService = new Intent(this, SensorService.class);
+        startService(sensorService);*/
+        createFiles();
         new SendMessageAsyncTask(googleApiClient, PATH_START_SENSOR_SERVICE)
                 .execute("message-start-sensor-service");
     }
 
     @OnClick(R.id.stopSensorOnWear_Button)
     public void stopSensorButtonClicked() {
+        Log.d(TAG, "stopSensorButtonClicked: ");
+        /*Intent sensorService = new Intent(this, SensorService.class);
+        stopService(sensorService);*/
         new SendMessageAsyncTask(googleApiClient, PATH_STOP_SENSOR_SERVICE)
                 .execute("message-stop-sensor-service");
         new Handler().postDelayed(new Runnable() {
@@ -174,11 +192,10 @@ public class CommActivity extends AppCompatActivity
                 Uri uri = dataItem.getUri();
                 String path = uri.getPath();
 
-                if (path.startsWith(PATH_SENSOR_DATA + "/")) {
-                    unpackSensorData(
-                            Integer.parseInt(uri.getLastPathSegment()),
-                            DataMapItem.fromDataItem(dataItem).getDataMap()
-                    );
+                if (path.startsWith(PATH_SENSOR_DATA)) { // + "/")) {
+                    unpackSensorData(DataMapItem.fromDataItem(dataItem).getDataMap());
+                } else {
+                    Log.d(TAG, "onDataChanged: " + path);
                 }
             }
         }
@@ -216,6 +233,22 @@ public class CommActivity extends AppCompatActivity
         }
     }
 
+    private void createFiles() {
+        Log.d(TAG, "createFiles: ");
+        try {
+            sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+            if (sessionCSV.exists()) {
+                sessionCSV.delete();
+                sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+            }
+            mFileWriter = new FileWriter(sessionCSV, true);
+        } catch (Exception e) {
+            Toast.makeText(this, "writer error", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+
+    }
+
     private void addListeners() {
         Wearable.DataApi.addListener(googleApiClient, this);
         Wearable.MessageApi.addListener(googleApiClient, this);
@@ -229,7 +262,7 @@ public class CommActivity extends AppCompatActivity
         Wearable.CapabilityApi.removeListener(googleApiClient, this);
     }
 
-    private void unpackSensorData(int sensorType, DataMap dataMap) {
+    private void unpackSensorData(DataMap dataMap) {
         int accuracy = dataMap.getInt(ACCURACY);
         long timestamp = dataMap.getLong(TIMESTAMP);
         String acc_values = dataMap.getString(ACC_VALUES);
@@ -237,6 +270,26 @@ public class CommActivity extends AppCompatActivity
         String hr_values = dataMap.getString(HR_VALUES);
 
         setSensorTextView(acc_values, gyro_values, hr_values);
+
+        String[] array = acc_values.split(",");
+        Float x = Float.parseFloat(array[0]);
+        Float y = Float.parseFloat(array[1]);
+        Float z = Float.parseFloat(array[2]);
+
+        writeLog(acc_values + "," + CallNativeFunctions.calculateMag(x, y, z));
+    }
+
+    private void writeLog(String data) {
+        try {
+            mFileWriter = new FileWriter(sessionCSV, true);
+            mFileWriter.append(data);
+            mFileWriter.append("\n");
+            mFileWriter.close();
+            Log.d(TAG, "writeLog() Sensor Data: " + data);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "IO Exception NN: " + e.toString());
+        }
     }
 
     public void setSensorTextView(String acc_values, String gyro_values, String hr_values) {

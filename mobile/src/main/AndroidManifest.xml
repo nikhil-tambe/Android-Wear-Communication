@@ -56,6 +56,8 @@
             </intent-filter>
         </service>
 
+        <service android:name=".services.SensorService"/>
+
     </application>
 
 </manifest>
