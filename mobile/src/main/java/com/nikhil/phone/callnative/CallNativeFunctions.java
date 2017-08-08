@@ -16,4 +16,7 @@ public class CallNativeFunctions {
 
     public static native double calculateMag(double x, double y, double z);
 
+    /*public static native void calcRep(double ax, double ay, double az,
+                                      double gx, double gy, double gz);*/
+
 }

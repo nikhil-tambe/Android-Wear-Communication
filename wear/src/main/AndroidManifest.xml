@@ -71,6 +71,8 @@
 
         <activity android:name=".ui.activities.SensorActivity" />
 
+        <activity android:name=".ui.activities.RepCountActivity" />
+
     </application>
 
 </manifest>

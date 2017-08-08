@@ -8,7 +8,8 @@
         android:id="@+id/openOnPhone_Button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
         android:text="Open On Phone"/>
 
     <Button
@@ -18,5 +19,13 @@
         android:layout_below="@id/openOnPhone_Button"
         android:layout_centerInParent="true"
         android:text="Go To Sensors"/>
+
+    <Button
+        android:id="@+id/gotoReps_Button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/gotoSensors_Button"
+        android:layout_centerInParent="true"
+        android:text="Check Reps"/>
 
 </RelativeLayout>

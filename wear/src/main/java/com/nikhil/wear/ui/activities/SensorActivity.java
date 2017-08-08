@@ -74,6 +74,7 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
 
         context = this;
         ButterKnife.bind(this);
+        setAmbientEnabled();
     }
 
     @Override
@@ -132,6 +133,21 @@ public class SensorActivity extends WearableActivity implements SensorEventListe
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
+    }
+
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+    }
+
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+    }
+
+    @Override
+    public void onExitAmbient() {
+        super.onExitAmbient();
     }
 
     @OnClick(R.id.startSensor_Button)

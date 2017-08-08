@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.WindowManager;
 import android.widget.RelativeLayout;
@@ -14,22 +14,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.PendingResult;
-import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.wearable.CapabilityApi;
 import com.google.android.gms.wearable.CapabilityInfo;
-import com.google.android.gms.wearable.Node;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.wear.R;
 import com.nikhil.wear.comm.SendMessageAsyncTask;
+import com.nikhil.wear.utils.Utils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
@@ -40,7 +31,7 @@ import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS
  * Created by Nikhil on 20/7/17.
  */
 
-public class MainActivity extends Activity implements
+public class MainActivity extends WearableActivity implements
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         CapabilityApi.CapabilityListener {
@@ -55,6 +46,7 @@ public class MainActivity extends Activity implements
         setContentView(R.layout.main_activity);
 
         ButterKnife.bind(this);
+        setAmbientEnabled();
 
         main_activity_layout = findViewById(R.id.main_activity_layout);
 
@@ -105,6 +97,21 @@ public class MainActivity extends Activity implements
         }
     }
 
+    @Override
+    public void onEnterAmbient(Bundle ambientDetails) {
+        super.onEnterAmbient(ambientDetails);
+    }
+
+    @Override
+    public void onUpdateAmbient() {
+        super.onUpdateAmbient();
+    }
+
+    @Override
+    public void onExitAmbient() {
+        super.onExitAmbient();
+    }
+
     @OnClick(R.id.openOnPhone_Button)
     public void openOnPhoneButton_Clicked() {
         new SendMessageAsyncTask(googleApiClient, PATH_START_APP).execute("started-from-wear");
@@ -113,6 +120,11 @@ public class MainActivity extends Activity implements
     @OnClick(R.id.gotoSensors_Button)
     public void goToSensorsButton_Clicked() {
         startActivity(new Intent(this, SensorActivity.class));
+    }
+
+    @OnClick(R.id.gotoReps_Button)
+    public void gotoRepsButton_Clicked(){
+        startActivity(new Intent(this, RepCountActivity.class));
     }
 
     @Override
@@ -128,6 +140,7 @@ public class MainActivity extends Activity implements
     @Override
     public void onConnected(Bundle connectionHint) {
         Log.d(TAG, "onConnected(): Successfully connected to Google API client");
+        Utils.vibrate(this, 0);
         Wearable.CapabilityApi.addListener(
                 googleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
     }

@@ -30,8 +30,8 @@ import com.google.android.gms.wearable.MessageApi;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
-import com.nikhil.phone.comm.SendMessageAsyncTask;
 import com.nikhil.phone.callnative.CallNativeFunctions;
+import com.nikhil.phone.comm.SendMessageAsyncTask;
 import com.nikhil.shared.CheckConnection;
 
 import java.io.File;
@@ -271,12 +271,19 @@ public class CommActivity extends AppCompatActivity
 
         setSensorTextView(acc_values, gyro_values, hr_values);
 
-        String[] array = acc_values.split(",");
-        Float x = Float.parseFloat(array[0]);
-        Float y = Float.parseFloat(array[1]);
-        Float z = Float.parseFloat(array[2]);
+        String[] acc_array = acc_values.split(",");
+        Float ax = Float.parseFloat(acc_array[0]);
+        Float ay = Float.parseFloat(acc_array[1]);
+        Float az = Float.parseFloat(acc_array[2]);
 
-        writeLog(acc_values + "," + CallNativeFunctions.calculateMag(x, y, z));
+        /*String[] gyro_array = acc_values.split(",");
+        Float gx = Float.parseFloat(gyro_array[0]);
+        Float gy = Float.parseFloat(gyro_array[1]);
+        Float gz = Float.parseFloat(gyro_array[2]);
+
+        CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);*/
+
+        writeLog(acc_values + "," + CallNativeFunctions.calculateMag(ax, ay, az));
     }
 
     private void writeLog(String data) {
