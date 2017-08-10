@@ -18,16 +18,14 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 /**
- * The main activity for the Jumping Jack application. This activity registers itself to receive
- * sensor values. Since on wearable devices a full screen activity is very short-lived, we set the
- * FLAG_KEEP_SCREEN_ON to give user adequate time for taking actions but since we don't want to
- * keep screen on for an extended period of time, there is a SCREEN_ON_TIMEOUT_MS that is enforced
- * if no interaction is discovered.
- * <p>
- * This activity includes a {@link android.support.v4.view.ViewPager} with two pages, one that
- * shows the current count and one that allows user to reset the counter. the current value of the
- * counter is persisted so that upon re-launch, the counter picks up from the last value. At any
- * stage, user can set this counter to 0.
+ * This activity registers itself to receive sensor values. Since on wearable devices a full screen
+ * activity is very short-lived, we set the FLAG_KEEP_SCREEN_ON to give user adequate time for
+ * taking actions but since we don't want to keep screen on for an extended period of time, there
+ * is a SCREEN_ON_TIMEOUT_MS that is enforced if no interaction is discovered.<p> This activity
+ * includes a {@link android.support.v4.view.ViewPager} with two pages, one that shows the current
+ * count and one that allows user to reset the counter. the current value of the counter is
+ * persisted so that upon re-launch, the counter picks up from the last value. At any stage,
+ * user can set this counter to 0.
  */
 
 /**
@@ -37,11 +35,6 @@ import butterknife.OnClick;
 public class RepCountActivity extends WearableActivity implements SensorEventListener {
 
     private static final String TAG = "RepCountActivity";
-
-    /**
-     * How long to keep the screen on when no activity is happening
-     **/
-    private static final long SCREEN_ON_TIMEOUT_MS = 20000; // in milliseconds
 
     /**
      * an up-down movement that takes more than this will not be registered as such
@@ -63,7 +56,7 @@ public class RepCountActivity extends WearableActivity implements SensorEventLis
     private Sensor sensor;
     private long lastTime = 0;
     private boolean isUp = false;
-    private int jumpCounter = 0;
+    private int repCounter = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,8 +66,8 @@ public class RepCountActivity extends WearableActivity implements SensorEventLis
         ButterKnife.bind(this);
         setAmbientEnabled();
 
-        jumpCounter = Utils.getCounterFromPreference(this);
-        counter_TextView.setText("" + jumpCounter);
+        repCounter = Utils.getCounterFromPreference(this);
+        counter_TextView.setText("" + repCounter);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
     }
@@ -156,8 +149,8 @@ public class RepCountActivity extends WearableActivity implements SensorEventLis
         if (up) {
             return;
         }
-        jumpCounter++;
-        setCounter(jumpCounter);
+        repCounter++;
+        setCounter(repCounter);
     }
 
     /**
