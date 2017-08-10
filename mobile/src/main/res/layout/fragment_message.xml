@@ -97,4 +97,28 @@
 
     </LinearLayout>
 
+    <LinearLayout
+        android:id="@+id/reps_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:layout_below="@id/hr_layout">
+
+        <Button
+            android:id="@+id/calcReps_Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/hr_layout"
+            android:text="Calculate Reps"/>
+
+        <TextView
+            android:id="@+id/repCount_TextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="Reps"/>
+
+    </LinearLayout>
+
 </RelativeLayout>

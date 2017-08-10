@@ -34,7 +34,9 @@ import com.nikhil.phone.callnative.CallNativeFunctions;
 import com.nikhil.phone.comm.SendMessageAsyncTask;
 import com.nikhil.shared.CheckConnection;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -78,6 +80,8 @@ public class CommActivity extends AppCompatActivity
     TextView sensorGyroData_TextView;
     @BindView(R.id.sensorHRData_TextView)
     TextView sensorHRData_TextView;
+    @BindView(R.id.repCount_TextView)
+    TextView repCount_TextView;
     File sessionCSV;
     FileWriter mFileWriter;
     private boolean resolvingError = false;
@@ -121,7 +125,7 @@ public class CommActivity extends AppCompatActivity
     }
 
     @OnClick(R.id.startSensorOnWear_Button)
-    public void startSensorButtonClicked() {
+    public void startSensorButton_Clicked() {
         Log.d(TAG, "startSensorButtonClicked: ");
         /*Intent sensorService = new Intent(this, SensorService.class);
         startService(sensorService);*/
@@ -131,7 +135,7 @@ public class CommActivity extends AppCompatActivity
     }
 
     @OnClick(R.id.stopSensorOnWear_Button)
-    public void stopSensorButtonClicked() {
+    public void stopSensorButton_Clicked() {
         Log.d(TAG, "stopSensorButtonClicked: ");
         /*Intent sensorService = new Intent(this, SensorService.class);
         stopService(sensorService);*/
@@ -143,6 +147,34 @@ public class CommActivity extends AppCompatActivity
                 setSensorTextView("", "", "");
             }
         }, 1000);
+    }
+
+    @OnClick(R.id.calcReps_Button)
+    public void calcRepsButton_Clicked() {
+        try {
+            sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+            if (sessionCSV.exists()) {
+                BufferedReader br = new BufferedReader(new FileReader(sessionCSV));
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] raw_values = line.split(",");
+                    Float ax = Float.parseFloat(raw_values[0]);
+                    Float ay = Float.parseFloat(raw_values[1]);
+                    Float az = Float.parseFloat(raw_values[2]);
+                    Float gx = Float.parseFloat(raw_values[3]);
+                    Float gy = Float.parseFloat(raw_values[4]);
+                    Float gz = Float.parseFloat(raw_values[5]);
+                    CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);
+                }
+            } else {
+                Toast.makeText(this, "No Session File", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        repCount_TextView.setText("" + CallNativeFunctions.getRepValue());
+
     }
 
     @Override
@@ -276,14 +308,15 @@ public class CommActivity extends AppCompatActivity
         Float ay = Float.parseFloat(acc_array[1]);
         Float az = Float.parseFloat(acc_array[2]);
 
-        /*String[] gyro_array = acc_values.split(",");
+        String[] gyro_array = gyro_values.split(",");
         Float gx = Float.parseFloat(gyro_array[0]);
         Float gy = Float.parseFloat(gyro_array[1]);
         Float gz = Float.parseFloat(gyro_array[2]);
 
-        CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);*/
+        CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);
 
-        writeLog(acc_values + "," + CallNativeFunctions.calculateMag(ax, ay, az));
+        writeLog(acc_values + "," + gyro_values + "," + hr_values);
+        //CallNativeFunctions.calculateMag(ax, ay, az));
     }
 
     private void writeLog(String data) {
@@ -292,10 +325,9 @@ public class CommActivity extends AppCompatActivity
             mFileWriter.append(data);
             mFileWriter.append("\n");
             mFileWriter.close();
-            Log.d(TAG, "writeLog() Sensor Data: " + data);
+            //Log.d(TAG, "writeLog() Sensor Data: " + data);
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e(TAG, "IO Exception NN: " + e.toString());
         }
     }
 

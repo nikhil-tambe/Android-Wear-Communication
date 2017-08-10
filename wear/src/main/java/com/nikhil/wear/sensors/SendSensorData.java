@@ -83,7 +83,7 @@ public class SendSensorData {
 
     private void sendSensorDataInBackground(int sensorType, int accuracy, long timestamp, String[] values) {
 
-        Log.d(TAG, "Sensor " + sensorType + " = " + values[0] + values[1] + values[2]);
+        //Log.d(TAG, "Sensor " + sensorType + " = " + values[0] + "," + values[1] + "," + values[2]);
 
         PutDataMapRequest dataMap = PutDataMapRequest.create(PATH_SENSOR_DATA); // + "/" + sensorType);
 
