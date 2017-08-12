@@ -118,6 +118,12 @@ public class CommActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopSensorButton_Clicked();
+    }
+
     @OnClick(R.id.startApp_Button)
     public void startAppButton_Clicked() {
         new SendMessageAsyncTask(googleApiClient, PATH_START_APP)
@@ -313,7 +319,9 @@ public class CommActivity extends AppCompatActivity
         Float gy = Float.parseFloat(gyro_array[1]);
         Float gz = Float.parseFloat(gyro_array[2]);
 
-        CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);
+        //CallNativeFunctions.helloWorld();
+
+        repCount_TextView.setText("" + CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz));
 
         writeLog(acc_values + "," + gyro_values + "," + hr_values);
         //CallNativeFunctions.calculateMag(ax, ay, az));

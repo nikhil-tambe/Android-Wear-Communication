@@ -14,8 +14,9 @@
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 
-#define WINDOW_SIZE 50 //50
+#define WINDOW_SIZE 75 //50
 #define MAX_MIN_DIFF 5 //850
+#define MINIMUM_SAMPLES 5
 
 struct mpu2 {
     uint16_t x_accel;

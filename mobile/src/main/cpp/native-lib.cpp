@@ -10,22 +10,26 @@
 // #include "rep.h"
 // #include "rep.c"
 
+// 15:17:43 -> 15:18:04 = 21sec  frames=> 516.
 
 class native_lib {
 
-    char stepflag_rep;
-    int cycle_count_rep, avglen_rep, tot_samples_rep, oldavg_rep, newavg_rep,
-            avg_rssdat_rep, avgthresh_rep, newmax_rep, newmin_rep, step_cal_incre_rep,
-            count_idle_rep, maxavg_rep, minavg_rep;
-    int accel_dat_rep[80];
-    float tot_force, tot_velo, power, rep_count_var;
+    int stepflag_rep, frameCount;
+    int rep_count_var, cycle_count_rep, avglen_rep, tot_samples_rep, oldAccMag, newAccMag,
+            avgthresh_rep, newmax_rep, newmin_rep, step_cal_incre_rep,
+            count_idle_rep, maxavg_rep, minavg_rep; //, avg_rssdat_rep;
+    int accDataArray[WINDOW_SIZE];
+    float tot_force, tot_velo, power;
     std::string s = "hello";
 
 public:
 
     //**********************************************************************************************
     std::string helloString() {
-        LOGD("rep_count_var %f", rep_count_var);
+        //LOGD("rep_count_var %f", rep_count_var);
+        //LOGD("frameCount %i", frameCount++);
+        stepflag_rep = 2;
+        avglen_rep = 5;
         return s;
     }
 
@@ -40,8 +44,8 @@ public:
     //**********************************************************************************************
     int call_rep(mpu2 *mpu_data_r) {
 
-        float acc_mag, gyro_mag, Ax, Ay, Az, Gx, Gy, Gz,
-                Ay_rep, Ax_rep, Az_rep, Gx_rep, Gy_rep, Gz_rep;
+        float acc_mag, gyro_mag, Ax, Ay, Az, Gx, Gy, Gz;
+                //, Ay_rep, Ax_rep, Az_rep, Gx_rep, Gy_rep, Gz_rep;
 
         Ax = (mpu_data_r->x_accel);
         Ay = (mpu_data_r->y_accel);
@@ -49,17 +53,16 @@ public:
 
         acc_mag = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
 
-        avg_rssdat_rep = acc_mag;
+        // avg_rssdat_rep = acc_mag;
 
-        Gx = (mpu_data_r->x_gyro);
-        Gy = (mpu_data_r->y_gyro);
-        Gz = (mpu_data_r->z_gyro);
-
-        gyro_mag = sqrt((Gx * Gx) + (Gy * Gy) + (Gz * Gz));
+        // Gx = (mpu_data_r->x_gyro);
+        // Gy = (mpu_data_r->y_gyro);
+        // Gz = (mpu_data_r->z_gyro);
+        // gyro_mag = sqrt((Gx * Gx) + (Gy * Gy) + (Gz * Gz));
 
         if (cycle_count_rep >= WINDOW_SIZE) {
             for (int i = 0; i < avglen_rep; i++) {
-                accel_dat_rep[i] = accel_dat_rep[cycle_count_rep + i - (avglen_rep)];
+                accDataArray[i] = accDataArray[cycle_count_rep + i - (avglen_rep)];
             }
             cycle_count_rep = avglen_rep;
         }
@@ -69,34 +72,37 @@ public:
         }
 
         // subtract first sample in sliding boxcar avg
-        if (tot_samples_rep > 5) {
-            oldavg_rep = newavg_rep;
-            newavg_rep -= accel_dat_rep[cycle_count_rep - avglen_rep];
+        if (tot_samples_rep > MINIMUM_SAMPLES) {
+            oldAccMag = newAccMag;
+            newAccMag -= accDataArray[cycle_count_rep - avglen_rep];
         }
 
-        accel_dat_rep[cycle_count_rep] = avg_rssdat_rep; // place current sample data in buffer
-        //LOGD("accel_dat_rep[cycle_count_rep]: %i", accel_dat_rep[cycle_count_rep]);
-        newavg_rep += avg_rssdat_rep; // add new sample to sliding boxcar avg
-        if ((abs(newavg_rep - oldavg_rep)) < avgthresh_rep)
-            newavg_rep = oldavg_rep;
-        if (avg_rssdat_rep > newmax_rep)
-            newmax_rep = avg_rssdat_rep;
-        if (avg_rssdat_rep < newmin_rep)
-            newmin_rep = avg_rssdat_rep;
-        tot_samples_rep++;
-        cycle_count_rep++; // increment count of samples in current step
+        // place current sample data in buffer
+        accDataArray[cycle_count_rep] = acc_mag;
+        //LOGD("accDataArray[cycle_count_rep]:%i : %i", cycle_count_rep, accDataArray[cycle_count_rep]);
 
-        //LOGD("rep_count_var: %f, %f, %i, %i", acc_mag, gyro_mag, tot_samples_rep, cycle_count_rep);
+        newAccMag += acc_mag; // add new sample to sliding boxcar avg
+        if ((abs(newAccMag - oldAccMag)) < 1 ) //avgthresh_rep)
+            newAccMag = oldAccMag;
+
+        // Conditions to store Maximum & Minimum AccMag value.
+        if (acc_mag > newmax_rep)
+            newmax_rep = acc_mag;
+        if (acc_mag < newmin_rep)
+            newmin_rep = acc_mag;
+
+        // increment count of samples in current step
+        tot_samples_rep++;
+        cycle_count_rep++;
 
         if (tot_samples_rep > 6) {
-            if (IsStep_rep(newavg_rep, oldavg_rep)) {
+            if (IsStep_rep()){ //newAccMag, oldAccMag)) {
                 int diff = abs(newmax_rep - newmin_rep);
-                //LOGD("DIFF: %i", diff);
                 if (diff > MAX_MIN_DIFF) {
                     rep_count_var++; // += 0.5;
-                    mpu_data_r->rep_count_strt = rep_count_var;
+                    // mpu_data_r->rep_count_strt = rep_count_var;
                     // _force(power, &gyro_mag, &acc_mag, tot_force, tot_velo);
-                    LOGD("rep_count_var: %f", rep_count_var);
+                    LOGE("DIFF: %i, rep_count_var: %d", diff, rep_count_var);
                 }
 
                 step_cal_incre_rep += 2;
@@ -104,16 +110,16 @@ public:
 
                 // need all data used in calculating newavg
                 for (int i = 0; i < avglen_rep; i++)
-                    accel_dat_rep[i] = accel_dat_rep[cycle_count_rep + i - (avglen_rep)];
+                    accDataArray[i] = accDataArray[cycle_count_rep + i - (avglen_rep)];
 
                 cycle_count_rep = avglen_rep;
-                maxavg_rep = -50000.0;
-                minavg_rep = 50000.0;
-                newmax_rep = -50000.0;
-                newmin_rep = 50000.0;
-            }
+                maxavg_rep = -5.0;
+                minavg_rep = 5.0;
+                newmax_rep = -5.0;
+                newmin_rep = 5.0;
+            } // if IsStep condition Completed.
         }
-        return 0;
+        return rep_count_var;
     }
 
     //**********************************************************************************************
@@ -126,37 +132,42 @@ public:
     }
 
     //**********************************************************************************************
-    char IsStep_rep(float avg_rep, float oldavg_rep) {
-        //LOGD("avg_rep: %i - %i = %i", avg_rep, oldavg_rep, (avg_rep-oldavg_rep));
+    char IsStep_rep() { //float newAccMag, float oldAccMag) {
+        //LOGD("avg_rep: %i - %i = %i", avg_rep, oldAccMag, (avg_rep-oldAccMag));
         // this function attempts to determine when a step is complete
+
+        LOGD("************************ stepflag: %i, frameCount: %i, cycleCount: %i", stepflag_rep, frameCount++, cycle_count_rep);
+        LOGD("newAccMag: %i, oldAccMag: %i", newAccMag, oldAccMag);
+        LOGD("maxavg: %i, minavg_rep: %i", maxavg_rep, minavg_rep);
+
         float step_thresh_rep = 5.0; // used to prevent noise from fooling the algorithm
 
         if (stepflag_rep == 2) {
-            if (avg_rep > (oldavg_rep + step_thresh_rep))
+            if (newAccMag > (oldAccMag + step_thresh_rep))
                 stepflag_rep = 1;
-            if (avg_rep < (oldavg_rep - step_thresh_rep))
+            if (newAccMag < (oldAccMag - step_thresh_rep))
                 stepflag_rep = 0;
             return 0;
         } // first time through this function
 
         if (stepflag_rep == 1) {
-            if ((maxavg_rep > minavg_rep) && (avg_rep >
+            if ((maxavg_rep > minavg_rep) && (newAccMag >
                                               ((maxavg_rep + minavg_rep) / 2)) &&
-                (oldavg_rep < ((maxavg_rep + minavg_rep / 2))))
+                (oldAccMag < ((maxavg_rep + minavg_rep / 2))))
                 return 1;
-            if (avg_rep < (oldavg_rep - step_thresh_rep)) {
+            if (newAccMag < (oldAccMag - step_thresh_rep)) {
                 stepflag_rep = 0;
-                if (oldavg_rep > maxavg_rep)
-                    maxavg_rep = oldavg_rep;
+                if (oldAccMag > maxavg_rep)
+                    maxavg_rep = oldAccMag;
             } // slope has turned down
             return 0;
         } // slope has been up
 
         if (stepflag_rep == 0) {
-            if (avg_rep > (oldavg_rep + step_thresh_rep)) {
+            if (newAccMag > (oldAccMag + step_thresh_rep)) {
                 stepflag_rep = 1;
-                if (oldavg_rep < minavg_rep)
-                    minavg_rep = oldavg_rep;
+                if (oldAccMag < minavg_rep)
+                    minavg_rep = oldAccMag;
             } // slope has turned up
             return 0;
         } // slope has been down
@@ -192,7 +203,7 @@ Java_com_nikhil_phone_callnative_CallNativeFunctions_calculateMag(
     return nativeLibObj.calculateMag(x, y, z);
 }
 
-JNIEXPORT void JNICALL
+JNIEXPORT int JNICALL
 Java_com_nikhil_phone_callnative_CallNativeFunctions_calcRep(
         JNIEnv *env,
         jobject,
@@ -209,7 +220,7 @@ Java_com_nikhil_phone_callnative_CallNativeFunctions_calcRep(
     mpu21.y_gyro = gy;
     mpu21.z_gyro = gz;
 
-    nativeLibObj.call_rep(&mpu21);
+    return nativeLibObj.call_rep(&mpu21);
 
 }
 
