@@ -39,6 +39,7 @@ public interface Constants {
         String SESSION_LOG_CSV = "/session_log.csv";
         String SESSION_DATE_CSV = "/session_date.csv";
         String UNKNOW_FILE_TXT = "/unknown.txt";
+        String SAMPLE_INDEX_CSV= "/sampleIndex.csv";
 
         String SESSION_LOG_PREFIX = "/session_";
         String SESSION_DATE_PREFIX = "/sessionDate_";

@@ -7,29 +7,31 @@
 #include "stdlib.h"
 
 #include "native-lib.h"
-// #include "rep.h"
-// #include "rep.c"
-
-// 15:17:43 -> 15:18:04 = 21sec  frames=> 516.
 
 class native_lib {
 
-    int stepflag_rep, frameCount;
-    int rep_count_var, cycle_count_rep, avglen_rep, tot_samples_rep, oldAccMag, newAccMag,
-            avgthresh_rep, newmax_rep, newmin_rep, step_cal_incre_rep,
-            count_idle_rep, maxavg_rep, minavg_rep; //, avg_rssdat_rep;
-    int accDataArray[WINDOW_SIZE];
+    int repCount, repFlag, frameCount, cycle_count_rep, avglen_rep;
+    float tot_samples_rep;
+    double newAccMag, oldAccMag, newmax_rep, newmin_rep, maxavg_rep, minavg_rep;
+    double accDataArray[WINDOW_SIZE];
+    int sampleIndexArray[1000];
     float tot_force, tot_velo, power;
-    std::string s = "hello";
+    std::string s = "hello NDK", sampleIndexCSV;
+    char arrr[1000];
 
 public:
 
     //**********************************************************************************************
     std::string helloString() {
-        //LOGD("rep_count_var %f", rep_count_var);
+        //LOGD("repCount %f", repCount);
         //LOGD("frameCount %i", frameCount++);
-        stepflag_rep = 2;
+        frameCount = 0;
+        repFlag = 2;
         avglen_rep = 5;
+        maxavg_rep = -10000.0;
+        minavg_rep = 10000.0;
+        newmax_rep = -10000.0;
+        newmin_rep = 10000.0;
         return s;
     }
 
@@ -44,32 +46,29 @@ public:
     //**********************************************************************************************
     int call_rep(mpu2 *mpu_data_r) {
 
-        float acc_mag, gyro_mag, Ax, Ay, Az, Gx, Gy, Gz;
-                //, Ay_rep, Ax_rep, Az_rep, Gx_rep, Gy_rep, Gz_rep;
+        double acc_mag, gyro_mag, Ax, Ay, Az, Gx, Gy, Gz;
+        //, Ay_rep, Ax_rep, Az_rep, Gx_rep, Gy_rep, Gz_rep;
+        frameCount++;
 
         Ax = (mpu_data_r->x_accel);
         Ay = (mpu_data_r->y_accel);
         Az = (mpu_data_r->z_accel);
 
         acc_mag = sqrt((Ax * Ax) + (Ay * Ay) + (Az * Az));
-
-        // avg_rssdat_rep = acc_mag;
-
-        // Gx = (mpu_data_r->x_gyro);
-        // Gy = (mpu_data_r->y_gyro);
-        // Gz = (mpu_data_r->z_gyro);
-        // gyro_mag = sqrt((Gx * Gx) + (Gy * Gy) + (Gz * Gz));
+        LOGD("****************************** acc_mag = %f", acc_mag);
 
         if (cycle_count_rep >= WINDOW_SIZE) {
-            for (int i = 0; i < avglen_rep; i++) {
+            /*for (int i = 0; i < avglen_rep; i++) {
                 accDataArray[i] = accDataArray[cycle_count_rep + i - (avglen_rep)];
             }
-            cycle_count_rep = avglen_rep;
+            cycle_count_rep = avglen_rep;*/
+            cycle_count_rep = 7;
+            tot_samples_rep = 7;
         }
 
-        if (tot_samples_rep >= WINDOW_SIZE) {
+        /*if (tot_samples_rep >= WINDOW_SIZE) {
             tot_samples_rep = avglen_rep;
-        }
+        }*/
 
         // subtract first sample in sliding boxcar avg
         if (tot_samples_rep > MINIMUM_SAMPLES) {
@@ -79,12 +78,12 @@ public:
 
         // place current sample data in buffer
         accDataArray[cycle_count_rep] = acc_mag;
-        //LOGD("accDataArray[cycle_count_rep]:%i : %i", cycle_count_rep, accDataArray[cycle_count_rep]);
 
-        newAccMag += acc_mag; // add new sample to sliding boxcar avg
-        if ((abs(newAccMag - oldAccMag)) < 1 ) //avgthresh_rep)
+        // add new sample to sliding boxcar avg
+        newAccMag += acc_mag;
+
+        if ((abs(newAccMag - oldAccMag)) < AVG_THRESHOLD)
             newAccMag = oldAccMag;
-
         // Conditions to store Maximum & Minimum AccMag value.
         if (acc_mag > newmax_rep)
             newmax_rep = acc_mag;
@@ -96,30 +95,28 @@ public:
         cycle_count_rep++;
 
         if (tot_samples_rep > 6) {
-            if (IsStep_rep()){ //newAccMag, oldAccMag)) {
-                int diff = abs(newmax_rep - newmin_rep);
+            if (isRep(newAccMag, oldAccMag)) {
+                double diff = abs(newmax_rep - newmin_rep);
                 if (diff > MAX_MIN_DIFF) {
-                    rep_count_var++; // += 0.5;
-                    // mpu_data_r->rep_count_strt = rep_count_var;
+                    repCount++; // += 0.5;
+                    // mpu_data_r->rep_count_strt = repCount;
                     // _force(power, &gyro_mag, &acc_mag, tot_force, tot_velo);
-                    LOGE("DIFF: %i, rep_count_var: %d", diff, rep_count_var);
+                    LOGE("DIFF: %f, repCount: %d", diff, repCount);
+                    sampleIndexArray[repCount] = frameCount;
                 }
-
-                step_cal_incre_rep += 2;
-                count_idle_rep = 0;
 
                 // need all data used in calculating newavg
                 for (int i = 0; i < avglen_rep; i++)
                     accDataArray[i] = accDataArray[cycle_count_rep + i - (avglen_rep)];
 
                 cycle_count_rep = avglen_rep;
-                maxavg_rep = -5.0;
-                minavg_rep = 5.0;
-                newmax_rep = -5.0;
-                newmin_rep = 5.0;
+                maxavg_rep = -10000.0;
+                minavg_rep = 10000.0;
+                newmax_rep = -10000.0;
+                newmin_rep = 10000.0;
             } // if IsStep condition Completed.
         }
-        return rep_count_var;
+        return repCount;
     }
 
     //**********************************************************************************************
@@ -132,40 +129,38 @@ public:
     }
 
     //**********************************************************************************************
-    char IsStep_rep() { //float newAccMag, float oldAccMag) {
-        //LOGD("avg_rep: %i - %i = %i", avg_rep, oldAccMag, (avg_rep-oldAccMag));
-        // this function attempts to determine when a step is complete
+    char isRep(double newAccMag, double oldAccMag) {
+        // this function attempts to determine when a rep is complete
 
-        LOGD("************************ stepflag: %i, frameCount: %i, cycleCount: %i", stepflag_rep, frameCount++, cycle_count_rep);
-        LOGD("newAccMag: %i, oldAccMag: %i", newAccMag, oldAccMag);
-        LOGD("maxavg: %i, minavg_rep: %i", maxavg_rep, minavg_rep);
+        LOGD("stepflag: %i, frameCount: %i, cycleCount: %i",
+             repFlag, frameCount, cycle_count_rep);
+        LOGD("newAccMag: %f, oldAccMag: %f", newAccMag, oldAccMag);
+        LOGD("maxavg: %f, minavg_rep: %f", maxavg_rep, minavg_rep);
 
-        float step_thresh_rep = 5.0; // used to prevent noise from fooling the algorithm
-
-        if (stepflag_rep == 2) {
-            if (newAccMag > (oldAccMag + step_thresh_rep))
-                stepflag_rep = 1;
-            if (newAccMag < (oldAccMag - step_thresh_rep))
-                stepflag_rep = 0;
+        if (repFlag == 2) {
+            if (newAccMag > (oldAccMag + STEP_THRESHOLD))
+                repFlag = 1;
+            if (newAccMag < (oldAccMag - STEP_THRESHOLD))
+                repFlag = 0;
             return 0;
         } // first time through this function
 
-        if (stepflag_rep == 1) {
-            if ((maxavg_rep > minavg_rep) && (newAccMag >
-                                              ((maxavg_rep + minavg_rep) / 2)) &&
-                (oldAccMag < ((maxavg_rep + minavg_rep / 2))))
+        if (repFlag == 1) {
+            if ((maxavg_rep > minavg_rep)
+                && (newAccMag > ((maxavg_rep + minavg_rep) / 2))
+                && (oldAccMag < ((maxavg_rep + minavg_rep / 2))))
                 return 1;
-            if (newAccMag < (oldAccMag - step_thresh_rep)) {
-                stepflag_rep = 0;
+            if (newAccMag < (oldAccMag - STEP_THRESHOLD)) {
+                repFlag = 0;
                 if (oldAccMag > maxavg_rep)
                     maxavg_rep = oldAccMag;
             } // slope has turned down
             return 0;
         } // slope has been up
 
-        if (stepflag_rep == 0) {
-            if (newAccMag > (oldAccMag + step_thresh_rep)) {
-                stepflag_rep = 1;
+        if (repFlag == 0) {
+            if (newAccMag > (oldAccMag + STEP_THRESHOLD)) {
+                repFlag = 1;
                 if (oldAccMag < minavg_rep)
                     minavg_rep = oldAccMag;
             } // slope has turned up
@@ -173,11 +168,29 @@ public:
         } // slope has been down
 
         return 0;
-    } // IsStep()
+    } // isRep()
 
+    //*********************************************************************************************
     double getRepCount() {
-        return rep_count_var;
+        //getSampleIndex();
+        return repCount;
     }
+
+    //*********************************************************************************************
+    std::string getSampleIndex() {
+        for (int i = 0; i <= repCount; ++i) {
+            int sampleNumber = sampleIndexArray[i];
+            if (sampleNumber > 0) {
+                //sampleIndexCSV += sampleNumber + ",";
+                sprintf(arrr, "%i", sampleNumber);
+                sampleIndexCSV.append(arrr);
+                sampleIndexCSV.append(",");
+                LOGE("Sample Array: %s", sampleIndexCSV.c_str());
+            }
+        }
+        return sampleIndexCSV;
+    }
+
 };
 
 native_lib nativeLibObj;
@@ -189,8 +202,9 @@ Java_com_nikhil_phone_callnative_CallNativeFunctions_helloWorld(
         JNIEnv *env,
         jobject /* this */) {
     std::string hello = "Hello World from C++";
-    LOGD("LOGD HELLO WORLD");
-    LOGE("LOGE ERROR LOG");
+    LOGD("LOG-D HELLO WORLD");
+    LOGI("LOG-I HELLO WORLD");
+    LOGE("LOG-E ERROR LOG");
     return env->NewStringUTF(nativeLibObj.helloString().c_str());
 }
 
@@ -207,8 +221,8 @@ JNIEXPORT int JNICALL
 Java_com_nikhil_phone_callnative_CallNativeFunctions_calcRep(
         JNIEnv *env,
         jobject,
-        double ax, double ay, double az,
-        double gx, double gy, double gz) {
+        double ax, double ay, double az) {
+    //,double gx, double gy, double gz) {
 
     mpu2 mpu21;
 
@@ -216,9 +230,9 @@ Java_com_nikhil_phone_callnative_CallNativeFunctions_calcRep(
     mpu21.y_accel = ay;
     mpu21.z_accel = az;
 
-    mpu21.x_gyro = gx;
+    /*mpu21.x_gyro = gx;
     mpu21.y_gyro = gy;
-    mpu21.z_gyro = gz;
+    mpu21.z_gyro = gz;*/
 
     return nativeLibObj.call_rep(&mpu21);
 
@@ -231,6 +245,14 @@ Java_com_nikhil_phone_callnative_CallNativeFunctions_getRepValue(
 
     return nativeLibObj.getRepCount();
 
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_nikhil_phone_callnative_CallNativeFunctions_getRepSampleIndexCSV(
+        JNIEnv *env,
+        jobject) {
+
+    return env->NewStringUTF(nativeLibObj.getSampleIndex().c_str());
 }
 
 }

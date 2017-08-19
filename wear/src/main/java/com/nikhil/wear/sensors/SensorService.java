@@ -31,12 +31,14 @@ public class SensorService extends Service implements SensorEventListener {
     String acc_data = "0,0,0";
     String gyro_data = "0,0,0";
     String hr_data = "72.0";
+    int frameCount;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "onCreate: ");
+        frameCount = 0;
         sendSensorData = SendSensorData.getInstance(this);
         registerAvailableSensors();
     }
@@ -77,11 +79,21 @@ public class SensorService extends Service implements SensorEventListener {
 
         String[] data = new String[] {acc_data, gyro_data , hr_data};
 
-        sendSensorData.sendData(
-                event.sensor.getType(),
-                event.accuracy,
-                event.timestamp,
-                data);
+        frameCount++;
+        /**
+         * 100 fps data.
+         * Control frame rate by:
+         * %5 = 20fps.
+         * %4 = 25fps.
+         * %2 = 50fps.
+         */
+        if (frameCount % 2 == 0){
+            sendSensorData.sendData(
+                    event.sensor.getType(),
+                    event.accuracy,
+                    event.timestamp,
+                    data);
+        }
     }
 
     @Override
@@ -106,7 +118,7 @@ public class SensorService extends Service implements SensorEventListener {
 
             if (gyroscopeSensor != null) {
                 sensorManager.registerListener(this, gyroscopeSensor,
-                        SensorManager.SENSOR_DELAY_NORMAL);
+                        SensorManager.SENSOR_DELAY_FASTEST);
             }
 
             if (hearRateSensor != null) {

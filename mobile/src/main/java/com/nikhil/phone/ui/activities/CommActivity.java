@@ -55,6 +55,7 @@ import static com.nikhil.shared.Constants.DataMapKeys.HR_VALUES;
 import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
+import static com.nikhil.shared.Constants.StorageC.SAMPLE_INDEX_CSV;
 import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
 
 /**
@@ -82,7 +83,7 @@ public class CommActivity extends AppCompatActivity
     TextView sensorHRData_TextView;
     @BindView(R.id.repCount_TextView)
     TextView repCount_TextView;
-    File sessionCSV;
+    File sessionCSV, sampleIndexFile;
     FileWriter mFileWriter;
     private boolean resolvingError = false;
 
@@ -157,6 +158,7 @@ public class CommActivity extends AppCompatActivity
 
     @OnClick(R.id.calcReps_Button)
     public void calcRepsButton_Clicked() {
+        CallNativeFunctions.helloWorld();
         try {
             sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
             if (sessionCSV.exists()) {
@@ -167,10 +169,10 @@ public class CommActivity extends AppCompatActivity
                     Float ax = Float.parseFloat(raw_values[0]);
                     Float ay = Float.parseFloat(raw_values[1]);
                     Float az = Float.parseFloat(raw_values[2]);
-                    Float gx = Float.parseFloat(raw_values[3]);
-                    Float gy = Float.parseFloat(raw_values[4]);
-                    Float gz = Float.parseFloat(raw_values[5]);
-                    CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz);
+                    //Float gx = Float.parseFloat(raw_values[3]);
+                    //Float gy = Float.parseFloat(raw_values[4]);
+                    //Float gz = Float.parseFloat(raw_values[5]);
+                    CallNativeFunctions.calcRep(ax, ay, az); //, gx, gy, gz);
                 }
             } else {
                 Toast.makeText(this, "No Session File", Toast.LENGTH_SHORT).show();
@@ -180,6 +182,8 @@ public class CommActivity extends AppCompatActivity
         }
 
         repCount_TextView.setText("" + CallNativeFunctions.getRepValue());
+
+        writeSampleIndex(CallNativeFunctions.getRepSampleIndexCSV());
 
     }
 
@@ -275,9 +279,11 @@ public class CommActivity extends AppCompatActivity
         Log.d(TAG, "createFiles: ");
         try {
             sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+            sampleIndexFile = new File(getExternalFilesDir(null), SAMPLE_INDEX_CSV);
             if (sessionCSV.exists()) {
-                sessionCSV.delete();
+                Log.d(TAG, "createFiles: " + sessionCSV.delete() + ", " + sampleIndexFile.delete());
                 sessionCSV = new File(getExternalFilesDir(null), SESSION_LOG_CSV);
+                sampleIndexFile = new File(getExternalFilesDir(null), SAMPLE_INDEX_CSV);
             }
             mFileWriter = new FileWriter(sessionCSV, true);
         } catch (Exception e) {
@@ -321,9 +327,9 @@ public class CommActivity extends AppCompatActivity
 
         //CallNativeFunctions.helloWorld();
 
-        repCount_TextView.setText("" + CallNativeFunctions.calcRep(ax, ay, az, gx, gy, gz));
+        repCount_TextView.setText("" + CallNativeFunctions.calcRep(ax, ay, az)); //, gx, gy, gz));
 
-        writeLog(acc_values + "," + gyro_values + "," + hr_values);
+        writeLog(acc_values + "," + CallNativeFunctions.calculateMag(ax, ay, az));//gyro_values + "," + hr_values);
         //CallNativeFunctions.calculateMag(ax, ay, az));
     }
 
@@ -334,7 +340,25 @@ public class CommActivity extends AppCompatActivity
             mFileWriter.append("\n");
             mFileWriter.close();
             //Log.d(TAG, "writeLog() Sensor Data: " + data);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeSampleIndex(String data) {
+        try {
+            sampleIndexFile = new File(getExternalFilesDir(null), SAMPLE_INDEX_CSV);
+            if (sampleIndexFile.exists()){
+                sampleIndexFile.delete();
+                sampleIndexFile = new File(getExternalFilesDir(null), SAMPLE_INDEX_CSV);
+            }
+            for (String s : data.split(",")){
+                FileWriter fileWriter = new FileWriter(sampleIndexFile, true);
+                fileWriter.append(s);
+                fileWriter.append("\n");
+                fileWriter.close();
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
