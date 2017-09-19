@@ -1,10 +1,8 @@
-package com.nikhil.wear.ui.activities;
+package com.nikhil.wear.ui;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
@@ -12,14 +10,8 @@ import android.view.WindowManager;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.wearable.CapabilityApi;
-import com.google.android.gms.wearable.CapabilityInfo;
-import com.google.android.gms.wearable.Wearable;
+import com.nikhil.shared.SendMessageAsyncTask;
 import com.nikhil.wear.R;
-import com.nikhil.wear.comm.SendMessageAsyncTask;
-import com.nikhil.wear.utils.Utils;
 
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -31,14 +23,10 @@ import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS
  * Created by Nikhil on 20/7/17.
  */
 
-public class MainActivity extends WearableActivity implements
-        GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener,
-        CapabilityApi.CapabilityListener {
+public class MainActivity extends WearableActivity {
 
     private static final String TAG = "nikhil MainActivity";
     RelativeLayout main_activity_layout;
-    private GoogleApiClient googleApiClient;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -51,11 +39,6 @@ public class MainActivity extends WearableActivity implements
         main_activity_layout = findViewById(R.id.main_activity_layout);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addApi(Wearable.API)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .build();
 
         String s = getIntent().getStringExtra(PATH_START_APP);
         if (s != null) {
@@ -70,7 +53,6 @@ public class MainActivity extends WearableActivity implements
     protected void onResume() {
         super.onResume();
         checkRequiredPermissions();
-        googleApiClient.connect();
     }
 
     private void checkRequiredPermissions() {
@@ -114,50 +96,12 @@ public class MainActivity extends WearableActivity implements
 
     @OnClick(R.id.openOnPhone_Button)
     public void openOnPhoneButton_Clicked() {
-        new SendMessageAsyncTask(googleApiClient, PATH_START_APP).execute("started-from-wear");
+        new SendMessageAsyncTask(this, PATH_START_APP).execute("started-from-wear");
     }
 
     @OnClick(R.id.gotoSensors_Button)
     public void goToSensorsButton_Clicked() {
         startActivity(new Intent(this, SensorActivity.class));
-    }
-
-    @OnClick(R.id.gotoReps_Button)
-    public void gotoRepsButton_Clicked(){
-        startActivity(new Intent(this, RepCountActivity.class));
-    }
-
-    @Override
-    protected void onPause() {
-        if ((googleApiClient != null) && googleApiClient.isConnected()) {
-            Wearable.CapabilityApi.removeListener(googleApiClient, this);
-            googleApiClient.disconnect();
-        }
-
-        super.onPause();
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        Log.d(TAG, "onConnected(): Successfully connected to Google API client");
-        Utils.vibrate(this, 0);
-        Wearable.CapabilityApi.addListener(
-                googleApiClient, this, Uri.parse("wear://"), CapabilityApi.FILTER_REACHABLE);
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.d(TAG, "onConnectionSuspended(): Connection to Google API client was suspended");
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        Log.e(TAG, "onConnectionFailed(): Failed to connect, with result: " + result);
-    }
-
-    @Override
-    public void onCapabilityChanged(CapabilityInfo capabilityInfo) {
-        Log.d(TAG, "onCapabilityChanged: " + capabilityInfo.toString());
     }
 
 }

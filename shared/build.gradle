@@ -25,4 +25,7 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:26.+'
     testCompile 'junit:junit:4.12'
+
+    // Wear
+    compile 'com.google.android.gms:play-services-wearable:11.0.2'
 }

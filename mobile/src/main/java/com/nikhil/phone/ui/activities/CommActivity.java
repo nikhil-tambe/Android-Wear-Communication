@@ -31,14 +31,11 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.nikhil.phone.R;
 import com.nikhil.phone.callnative.CallNativeFunctions;
-import com.nikhil.phone.comm.SendMessageAsyncTask;
+import com.nikhil.shared.SendMessageAsyncTask;
 import com.nikhil.shared.CheckConnection;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -55,7 +52,6 @@ import static com.nikhil.shared.Constants.DataMapKeys.HR_VALUES;
 import static com.nikhil.shared.Constants.DataMapKeys.TIMESTAMP;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_CODE_GROUP_PERMISSIONS;
 import static com.nikhil.shared.Constants.IntentC.REQUEST_RESOLVE_ERROR;
-import static com.nikhil.shared.Constants.StorageC.SAMPLE_INDEX_CSV;
 import static com.nikhil.shared.Constants.StorageC.SESSION_LOG_CSV;
 
 /**
@@ -125,7 +121,7 @@ public class CommActivity extends AppCompatActivity
 
     @OnClick(R.id.startApp_Button)
     public void startAppButton_Clicked() {
-        new SendMessageAsyncTask(googleApiClient, PATH_START_APP)
+        new SendMessageAsyncTask(this, PATH_START_APP)
                 .execute(messageInput_EditText.getText().toString());
     }
 
@@ -135,16 +131,14 @@ public class CommActivity extends AppCompatActivity
         /*Intent sensorService = new Intent(this, SensorService.class);
         startService(sensorService);*/
         createFiles();
-        new SendMessageAsyncTask(googleApiClient, PATH_START_SENSOR_SERVICE)
+        new SendMessageAsyncTask(this, PATH_START_SENSOR_SERVICE)
                 .execute("message-start-sensor-service");
     }
 
     @OnClick(R.id.stopSensorOnWear_Button)
     public void stopSensorButton_Clicked() {
         Log.d(TAG, "stopSensorButtonClicked: ");
-        /*Intent sensorService = new Intent(this, SensorService.class);
-        stopService(sensorService);*/
-        new SendMessageAsyncTask(googleApiClient, PATH_STOP_SENSOR_SERVICE)
+        new SendMessageAsyncTask(this, PATH_STOP_SENSOR_SERVICE)
                 .execute("message-stop-sensor-service");
         new Handler().postDelayed(new Runnable() {
             @Override

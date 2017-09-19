@@ -12,7 +12,7 @@ import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.gms.wearable.WearableListenerService;
 import com.nikhil.wear.sensors.SensorService;
-import com.nikhil.wear.ui.activities.MainActivity;
+import com.nikhil.wear.ui.MainActivity;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,7 +28,7 @@ import static com.nikhil.shared.Constants.ChannelC.PATH_STOP_SENSOR_SERVICE;
 
 public class WearDataLayerListenerService extends WearableListenerService {
 
-    public static final String TAG = "nikhil DataListener";
+    public static final String TAG = "nikhil WDataListener";
     GoogleApiClient googleApiClient;
 
     @Override
@@ -80,7 +80,8 @@ public class WearDataLayerListenerService extends WearableListenerService {
 
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        Log.d(TAG, "onMessageReceived: " + messageEvent.getPath() + ": " + messageEvent.toString());
+        Log.d(TAG, "onMessageReceived: " + messageEvent.getPath() + ": "
+                + new String(messageEvent.getData()));
 
         switch (messageEvent.getPath()) {
 
@@ -101,6 +102,9 @@ public class WearDataLayerListenerService extends WearableListenerService {
                 stopService(new Intent(this, SensorService.class));
                 break;
 
+            default:
+                Log.e(TAG, "onMessageReceived: " + messageEvent.getPath() + ": "
+                        + new String(messageEvent.getData()));
         }
 
     }

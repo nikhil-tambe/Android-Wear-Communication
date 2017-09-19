@@ -16,11 +16,4 @@ public class CallNativeFunctions {
 
     public static native double calculateMag(double x, double y, double z);
 
-    public static native int calcRep(double ax, double ay, double az);
-                                     //, double gx, double gy, double gz);
-
-    public static native double getRepValue();
-
-    public static native String getRepSampleIndexCSV();
-
 }

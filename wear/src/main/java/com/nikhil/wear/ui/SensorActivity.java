@@ -1,4 +1,4 @@
-package com.nikhil.wear.ui.activities;
+package com.nikhil.wear.ui;
 
 import android.content.Context;
 import android.hardware.Sensor;

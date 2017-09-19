@@ -20,12 +20,4 @@
         android:layout_centerInParent="true"
         android:text="Go To Sensors"/>
 
-    <Button
-        android:id="@+id/gotoReps_Button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/gotoSensors_Button"
-        android:layout_centerInParent="true"
-        android:text="Check Reps"/>
-
 </RelativeLayout>

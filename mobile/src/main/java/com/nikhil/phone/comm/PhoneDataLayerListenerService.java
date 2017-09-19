@@ -87,7 +87,7 @@ public class PhoneDataLayerListenerService extends WearableListenerService
 
             default:
                 Log.d(TAG, "onMessageReceived: " + messageEvent.getPath()
-                        + ": " + messageEvent.getData());
+                        + ": " + new String(messageEvent.getData()));
 
         }
 
@@ -116,37 +116,6 @@ public class PhoneDataLayerListenerService extends WearableListenerService
                 break;
         }
 
-    }
-
-    private void receiveFile(final Channel channel, final File file) {
-        channel.receiveFile(googleApiClient, Uri.fromFile(file), false)
-                .setResultCallback(new ResultCallback<Status>() {
-                    @Override
-                    public void onResult(@NonNull Status status) {
-                        Log.d(TAG, "onResult: " + file.getName() + " : " + status);
-                    }
-                });
-    }
-
-    private void renameFile(String path, File file) {
-        String s = new SimpleDateFormat(REVERSE_DATE_FORMAT, Locale.ENGLISH).format(new Date()) + ".csv";
-        switch (path) {
-            case CHANNEL_SESSION:
-                File sessionFile = new File(getExternalFilesDir(null) + SESSION_LOG_PREFIX + s);
-                Log.e(TAG, "renamedFile to session_" + s + ": " + file.renameTo(sessionFile));
-                break;
-
-            case CHANNEL_SESSION_DATE:
-                File sessionDateFile = new File(getExternalFilesDir(null) + SESSION_DATE_PREFIX + s);
-                Log.e(TAG, "renamedFile to sessionDate_" + s + ": " + file.renameTo(sessionDateFile));
-                break;
-
-            default:
-                File newUnknownFile = new File(getExternalFilesDir(null) + UNKNOWN_PREFIX + s);
-                Log.e(TAG, "renamedFile to unknown_" + s + ": " + file.renameTo(newUnknownFile));
-                break;
-
-        }
     }
 
     @Override
@@ -189,4 +158,36 @@ public class PhoneDataLayerListenerService extends WearableListenerService
     public void onConnectionSuspended(int i) {
 
     }
+
+    private void receiveFile(final Channel channel, final File file) {
+        channel.receiveFile(googleApiClient, Uri.fromFile(file), false)
+                .setResultCallback(new ResultCallback<Status>() {
+                    @Override
+                    public void onResult(@NonNull Status status) {
+                        Log.d(TAG, "onResult: " + file.getName() + " : " + status);
+                    }
+                });
+    }
+
+    private void renameFile(String path, File file) {
+        String s = new SimpleDateFormat(REVERSE_DATE_FORMAT, Locale.ENGLISH).format(new Date()) + ".csv";
+        switch (path) {
+            case CHANNEL_SESSION:
+                File sessionFile = new File(getExternalFilesDir(null) + SESSION_LOG_PREFIX + s);
+                Log.e(TAG, "renamedFile to session_" + s + ": " + file.renameTo(sessionFile));
+                break;
+
+            case CHANNEL_SESSION_DATE:
+                File sessionDateFile = new File(getExternalFilesDir(null) + SESSION_DATE_PREFIX + s);
+                Log.e(TAG, "renamedFile to sessionDate_" + s + ": " + file.renameTo(sessionDateFile));
+                break;
+
+            default:
+                File newUnknownFile = new File(getExternalFilesDir(null) + UNKNOWN_PREFIX + s);
+                Log.e(TAG, "renamedFile to unknown_" + s + ": " + file.renameTo(newUnknownFile));
+                break;
+
+        }
+    }
+
 }
